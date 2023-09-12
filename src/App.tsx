@@ -1,4 +1,4 @@
-import { IFieldMeta as FieldMeta, IWidgetField, IWidgetTable, TableMeta, bitable, FieldType, IOpenSegmentType } from "@base-open/web-api";
+import { IFieldMeta as FieldMeta, IWidgetField, IWidgetTable, TableMeta, bitable, FieldType, IOpenSegmentType } from "@lark-base-open/js-sdk";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Form, Toast, Spin, Col, Row, Button, Tooltip } from "@douyinfe/semi-ui";
 import { useTranslation } from 'react-i18next';
@@ -64,6 +64,7 @@ function Randomize() {
   const { t } = useTranslation();
   const [type, setType] = useState('number')
   const [loading, setLoading] = useState(false)
+  const [loadingContent, setLoadingContent] = useState('')
   const [tableInfo, setTableInfo] = useState<{
     /** 当前所选的table,默认为打开插件时的table */
     table: IWidgetTable,
@@ -253,37 +254,68 @@ function Randomize() {
     const fieldValueList = (await fieldInfo.field.getFieldValueList()).map(({ record_id }) => record_id);
     const fieldId = fieldInfo.field.id;
     fieldValueList.forEach((id) => {
-      recordIdList.delete(id)
+      recordIdList.delete(id!)
     })
 
-    const setTask: Promise<any>[] = []
-    for (const recordId of recordIdList) {
-      try {
-        const cellValue = getCellValue()
-        const promise = tableInfo?.table.setCellValue(fieldId, recordId!, cellValue) as any
-        setTask.push(promise)
-      } catch (error) {
-        console.error('单元格填充失败', error)
-        Toast.error(t('set.err'))
+    // const setTask: Promise<any>[] = []
+    // for (const recordId of recordIdList) {
+    //   try {
+    //     const cellValue = getCellValue()
+    //     const promise = tableInfo?.table.setCellValue(fieldId, recordId!, cellValue) as any
+    //     setTask.push(promise)
+    //   } catch (error) {
+    //     console.error('单元格填充失败', error)
+    //     Toast.error(t('set.err'))
+    //   }
+    // }
+    // Promise.all(setTask)
+    //   .then((results) => {
+    //     const successCount = results.filter((success) => !!success).length
+    //     Toast.success(t('success.num', { num: successCount }))
+    //   })
+    //   .catch((error) => {
+    //     console.error('部分单元格填充失败', error)
+    //     Toast.error(t('set.some.err'))
+    //   })
+    //   .finally(() => {
+    //     setLoading(false)
+    //   })
+
+
+
+
+
+    const toSetTask = [...recordIdList].map((recordId) => ({
+      recordId,
+      fields: {
+        [fieldId]: getCellValue(),
       }
+    }))
+    let successCount = 0;
+    const step = 500;
+    const sleep = 500
+    for (let index = 0; index < toSetTask.length; index += step) {
+      const element = toSetTask.slice(index, index + step);
+      await tableInfo?.table.setRecords(element).then(() => {
+        successCount += element.length;
+        setLoadingContent(t('success.num', { num: successCount }))
+      }).catch((e) => {
+        console.error(e)
+      });
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve('')
+        }, sleep);
+      })
     }
-    Promise.all(setTask)
-      .then((results) => {
-        const successCount = results.filter((success) => !!success).length
-        Toast.success(t('success.num', { num: successCount }))
-      })
-      .catch((error) => {
-        console.error('部分单元格填充失败', error)
-        Toast.error(t('set.some.err'))
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+
+    setLoading(false)
+    setLoadingContent('')
   }
 
   return <div>
-    <div>{t('table.info')}</div>
-    <Spin size="large" spinning={loading}>
+    <Spin style={{ height: '100vh' }} tip={loadingContent} size="large" spinning={loading}>
+      <div>{t('table.info')}</div>
       <Form wrapperCol={{ span: 17 }}
         labelPosition='left'
         labelAlign='right'
