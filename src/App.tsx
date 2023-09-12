@@ -257,30 +257,6 @@ function Randomize() {
       recordIdList.delete(id!)
     })
 
-    // const setTask: Promise<any>[] = []
-    // for (const recordId of recordIdList) {
-    //   try {
-    //     const cellValue = getCellValue()
-    //     const promise = tableInfo?.table.setCellValue(fieldId, recordId!, cellValue) as any
-    //     setTask.push(promise)
-    //   } catch (error) {
-    //     console.error('单元格填充失败', error)
-    //     Toast.error(t('set.err'))
-    //   }
-    // }
-    // Promise.all(setTask)
-    //   .then((results) => {
-    //     const successCount = results.filter((success) => !!success).length
-    //     Toast.success(t('success.num', { num: successCount }))
-    //   })
-    //   .catch((error) => {
-    //     console.error('部分单元格填充失败', error)
-    //     Toast.error(t('set.some.err'))
-    //   })
-    //   .finally(() => {
-    //     setLoading(false)
-    //   })
-
 
 
 
