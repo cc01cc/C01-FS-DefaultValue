@@ -268,10 +268,10 @@ function Randomize() {
       }
     }))
     let successCount = 0;
-    const step = 500;
-    const sleep = 500
+    const step = 5000;
     for (let index = 0; index < toSetTask.length; index += step) {
       const element = toSetTask.slice(index, index + step);
+      const sleep = element.length
       await tableInfo?.table.setRecords(element).then(() => {
         successCount += element.length;
         setLoadingContent(t('success.num', { num: successCount }))
