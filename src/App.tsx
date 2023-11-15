@@ -154,6 +154,7 @@ function InputDefaultValue() {
     }
 
     const onSelectField = async (f: any) => {
+        setOptions(undefined);
         if (!tableInfo?.table) {
             Toast.error(t('table.choose'));
             return;
