@@ -1,26 +1,20 @@
 import {
   IFieldMeta as FieldMeta,
-  IWidgetField,
-  IWidgetTable,
-  TableMeta,
+  ITableMeta,
   bitable,
   FieldType,
-  IOpenSegmentType,
-  ISingleSelectField, IBase
+  ISingleSelectField, IField, ITable, ISelectFieldOption
 } from "@lark-base-open/js-sdk";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Form, Toast, Spin, Col, Row, Button, Tooltip } from "@douyinfe/semi-ui";
-import {getDefaults, useTranslation} from 'react-i18next';
-import { IconHelpCircle } from '@douyinfe/semi-icons';
-
-
+import { useTranslation} from 'react-i18next';
 
 /** 支持填入默认值的字段 */
 const f = [FieldType.Number, FieldType.Rating, FieldType.Text, FieldType.SingleSelect]
 /** 表格，字段变化的时候刷新插件 */
 export default function Ap() {
   const [key, setKey] = useState<string | number>(0);
-  const [tableList, setTableList] = useState<IWidgetTable[]>([])
+  const [tableList, setTableList] = useState<ITable[]>([])
   // 绑定过的tableId
   const bindList = useRef<Set<string>>(new Set())
 
@@ -66,50 +60,31 @@ export default function Ap() {
   return <InputDefaultValue key={key}></InputDefaultValue>
 }
 
-/** 随机字符串支持的字段 */
-const randomChartsSupportField = [FieldType.Text]
-async function getOptions(fieldInfo: {
-        /**当前所选field的实例 */
-        field: IWidgetField | undefined;
-        /** 当前所选field的元信息 */
-        fieldMeta: FieldMeta | undefined;
-        /** tableInfo.table的所有field实例 */
-        fieldList: IWidgetField[];
-        /** tableInfo.table的所有field元信息 */
-        fieldMetaList: FieldMeta[];
-    } | undefined, table: bitable ) {
-  const tableById = await table.base.getTableById(fieldInfo?.field?.tableId as string);
-  const singleSelectField = await tableById.getField<ISingleSelectField>(fieldInfo?.fieldMeta?.id as string);
-  const iSelectFieldOptions = await singleSelectField?.getOptions();
-  console.log("iSelectFieldOptions", iSelectFieldOptions);
-  return iSelectFieldOptions;
-}
 function InputDefaultValue() {
   const { t } = useTranslation();
-  const [type, setType] = useState('number')
   const [loading, setLoading] = useState(false)
   const [loadingContent, setLoadingContent] = useState('')
   const [tableInfo, setTableInfo] = useState<{
     /** 当前所选的table,默认为打开插件时的table */
-    table: IWidgetTable,
+    table: ITable,
     /** 当前所选table的元信息 */
-    tableMeta: TableMeta
+    tableMeta: ITableMeta
     /** 所有的table元信息 */
-    tableMetaList: TableMeta[],
+    tableMetaList: ITableMeta[],
     /** 所有table的实例 */
-    tableList: IWidgetTable[]
+    tableList: ITable[]
   }>();
   const [fieldInfo, setFieldInfo] = useState<{
     /**当前所选field的实例 */
-    field: IWidgetField | undefined
+    field: IField | undefined
     /** 当前所选field的元信息 */
     fieldMeta: FieldMeta | undefined
     /** tableInfo.table的所有field实例 */
-    fieldList: IWidgetField[],
+    fieldList: IField[],
     /** tableInfo.table的所有field元信息 */
     fieldMetaList: FieldMeta[]
   }>()
-  const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState<ISelectFieldOption[]>();
 
   const formApi = useRef<any>()
 
@@ -183,27 +158,28 @@ function InputDefaultValue() {
       return;
     } else {
       const {fieldMetaList, fieldList} = fieldInfo!
-      const choosedField = fieldList.find(({id}) => f === id)!
-      const choosedFieldMeta = fieldMetaList.find(({id}) => f === id)!;
+      const chosenField = fieldList.find(({id}) => f === id)!
+      const chosenFieldMeta = fieldMetaList.find(({id}) => f === id)!;
       setFieldInfo({
         ...fieldInfo,
-        field: choosedField,
-        fieldMeta: choosedFieldMeta
+        field: chosenField,
+        fieldMeta: chosenFieldMeta
       } as any)
       console.log("fieldInfo", fieldInfo);
-      console.log("choosedField", choosedField);
-      if (choosedFieldMeta.type === FieldType.SingleSelect) {
-        getOptions(fieldInfo, bitable).then(setOptions);
+      console.log("chosenField", chosenField);
+      if (chosenFieldMeta.type === FieldType.SingleSelect) {
+        // getOptions(fieldInfo).then(setOptions);
+        const singleSelectField = await tableInfo.table.getField<ISingleSelectField>(chosenFieldMeta.id as string);
+        const iSelectFieldOptions = await singleSelectField?.getOptions();
+        console.log("iSelectFieldOptions", iSelectFieldOptions);
+        if (iSelectFieldOptions) {
+          setOptions(iSelectFieldOptions);
+        }
+      } else {
+        setOptions(undefined);
       }
     }
   }
-  /**
-   *
-   *     const singleSelectFieldList = await table.getFieldListByType(FieldType.SingleSelect);
-   *     console.log("singleSelectFieldList" , singleSelectFieldList);
-   *     const singleSelectField = await table.getField<ISingleSelectField>('fldjcTfyUC');
-   *     const options = await singleSelectField?.getOptions();
-   */
 
   const fieldMetas = (Array.isArray(fieldInfo?.fieldMetaList) &&
       // 等待切换table的时候，拿到正确的fieldList
@@ -227,7 +203,8 @@ function InputDefaultValue() {
       // case FieldType.Number:
       // case FieldType.Rating:
       // case FieldType.Currency:
-      //   console.log('number', restFormValue)
+      // case FieldType.Text:
+      //   // console.log('number', restFormValue)
       //   getCellValue = () => getRandom({ max, min, ...restFormValue })
       //   break;
       // case FieldType.Text:
@@ -302,9 +279,9 @@ function InputDefaultValue() {
             fieldMetas.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
           }
         </Form.Select>
-        <Form.Select style={{ width: '100%' }}  label={t('label.option')} field="option"  disabled={options.length === 0}>
+        <Form.Select style={{ width: '100%' }}  label={t('label.option')} field="option"  disabled={options === undefined || options.length === 0}>
           {
-            options.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
+            options?.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
           }
         </Form.Select>
 
@@ -319,67 +296,4 @@ function InputDefaultValue() {
       </Form>
     </Spin>
   </div>
-}
-
-function getRandomFloat({ min, max }: { min: number, max: number }) {
-  const _max = Math.max(min, max);
-  const _min = Math.min(min, max)
-  return Math.random() * (_max - _min) + _min;
-}
-function getDefaultValue(min: any) {
-  return min;
-}
-
-function getRandomInt({ min, max }: { min: number, max: number }) {
-  const _max = Math.max(min, max);
-  const _min = Math.min(min, max)
-  min = Math.ceil(_min);
-  max = Math.floor(_max);
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-
-/** 从chartsRange中生成一个随机字符串
- * 当chartsRange是一个数组的时候，该随机字符串由maxLengh - minLength 个数组单元组成
- * 当chartsRange是一个字符串的时候，该随机字符串由maxLength - minLength个字符串组成
- * 当生成的字符串包含excludeWords中的元素时，重新生成字符串，最多重试5次；如果5次之后依然还是重复的，则返回null
- */
-function randomCharts({
-  maxLength,
-  minLength,
-  chartsRange,
-  excludeWords
-}: {
-  maxLength: number,
-  minLength: number,
-  chartsRange: string | string[],
-  excludeWords: string[]
-}) {
-  /** 生成的字符串的长度/数组单元个数 */
-  const strLength = maxLength === minLength ? maxLength : getRandomInt({ max: maxLength, min: minLength });
-  const chartsRangeLength = chartsRange.length - 1
-  let str = ''
-  for (let index = 0; index < strLength; index++) {
-    let addWord = chartsRange[getRandomInt({ max: chartsRangeLength, min: 0 })];
-    let hasExcludedWords = false;
-
-    if (Array.isArray(excludeWords) && excludeWords.length) {
-      for (let i = 0; i < 5; i++) { // 5次重试
-        const index = getRandomInt({ max: chartsRangeLength, min: 0 })
-        addWord = chartsRange[index];
-        if (excludeWords.some((v) => (str + addWord).includes(v))) {
-          hasExcludedWords = true;
-        } else {
-          hasExcludedWords = false;
-          break;
-        }
-      }
-      if (hasExcludedWords) {
-        return null;
-      }
-    }
-    str += addWord
-
-  }
-  return str || null
 }
