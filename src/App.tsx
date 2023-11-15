@@ -1,13 +1,22 @@
-import { IFieldMeta as FieldMeta, IWidgetField, IWidgetTable, TableMeta, bitable, FieldType, IOpenSegmentType } from "@lark-base-open/js-sdk";
+import {
+  IFieldMeta as FieldMeta,
+  IWidgetField,
+  IWidgetTable,
+  TableMeta,
+  bitable,
+  FieldType,
+  IOpenSegmentType,
+  ISingleSelectField, IBase
+} from "@lark-base-open/js-sdk";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { Form, Toast, Spin, Col, Row, Button, Tooltip } from "@douyinfe/semi-ui";
-import { useTranslation } from 'react-i18next';
+import {getDefaults, useTranslation} from 'react-i18next';
 import { IconHelpCircle } from '@douyinfe/semi-icons';
 
 
 
-/** 支持填入随机数的字段 */
-const f = [FieldType.Number, FieldType.Rating, FieldType.Currency, FieldType.Text]
+/** 支持填入默认值的字段 */
+const f = [FieldType.Number, FieldType.Rating, FieldType.Text, FieldType.SingleSelect]
 /** 表格，字段变化的时候刷新插件 */
 export default function Ap() {
   const [key, setKey] = useState<string | number>(0);
@@ -54,13 +63,28 @@ export default function Ap() {
   }, [tableList])
 
 
-  return <Randomize key={key}></Randomize>
+  return <InputDefaultValue key={key}></InputDefaultValue>
 }
 
 /** 随机字符串支持的字段 */
 const randomChartsSupportField = [FieldType.Text]
-
-function Randomize() {
+async function getOptions(fieldInfo: {
+        /**当前所选field的实例 */
+        field: IWidgetField | undefined;
+        /** 当前所选field的元信息 */
+        fieldMeta: FieldMeta | undefined;
+        /** tableInfo.table的所有field实例 */
+        fieldList: IWidgetField[];
+        /** tableInfo.table的所有field元信息 */
+        fieldMetaList: FieldMeta[];
+    } | undefined, table: bitable ) {
+  const tableById = await table.base.getTableById(fieldInfo?.field?.tableId as string);
+  const singleSelectField = await tableById.getField<ISingleSelectField>(fieldInfo?.fieldMeta?.id as string);
+  const iSelectFieldOptions = await singleSelectField?.getOptions();
+  console.log("iSelectFieldOptions", iSelectFieldOptions);
+  return iSelectFieldOptions;
+}
+function InputDefaultValue() {
   const { t } = useTranslation();
   const [type, setType] = useState('number')
   const [loading, setLoading] = useState(false)
@@ -85,12 +109,15 @@ function Randomize() {
     /** tableInfo.table的所有field元信息 */
     fieldMetaList: FieldMeta[]
   }>()
+  const [options, setOptions] = useState([]);
 
   const formApi = useRef<any>()
+
 
   useEffect(() => {
     async function init() {
       const selection = await bitable.base.getSelection();
+      console.log("selection", selection);
       if (selection.tableId) {
         const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
           bitable.base.getTableById(selection.tableId),
@@ -103,15 +130,6 @@ function Randomize() {
           tableMetaList: tableMetaListRes.filter(({ name }) => name),
           tableList: tableListRes
         });
-        // 清空其他选项
-        formApi.current.setValues({
-          'table': tableRes.id,
-          'type': type,
-          'minLength': 11,
-          'maxLength': 11,
-          'chartsRange': '0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM!@#$%^&*()-+',
-          'excludeWords': `["Oo0","iIlL1"]`
-        })
 
         const fieldMetaList = await tableRes.getFieldMetaList();
         const fieldList = await tableRes.getFieldList();
@@ -130,7 +148,7 @@ function Randomize() {
   }, [])
 
 
-  /** 选择table的时候更新tableInfo和fieldInfo */
+  /** chosenField */
   const onSelectTable = async (t: any) => {
     if (tableInfo) {
       // 单选
@@ -156,94 +174,69 @@ function Randomize() {
         table: choosedTable.id
       })
     }
+    console.log("tableInfo", tableInfo);
   }
 
-  const onSelectField = (f: any) => {
+  const onSelectField = async (f: any) => {
     if (!tableInfo?.table) {
       Toast.error(t('table.choose'));
       return;
     } else {
-      const { fieldMetaList, fieldList } = fieldInfo!
-      const choosedField = fieldList.find(({ id }) => f === id)!
-      const choosedFieldMeta = fieldMetaList.find(({ id }) => f === id)!;
+      const {fieldMetaList, fieldList} = fieldInfo!
+      const choosedField = fieldList.find(({id}) => f === id)!
+      const choosedFieldMeta = fieldMetaList.find(({id}) => f === id)!;
       setFieldInfo({
         ...fieldInfo,
         field: choosedField,
         fieldMeta: choosedFieldMeta
       } as any)
+      console.log("fieldInfo", fieldInfo);
+      console.log("choosedField", choosedField);
+      if (choosedFieldMeta.type === FieldType.SingleSelect) {
+        getOptions(fieldInfo, bitable).then(setOptions);
+      }
     }
   }
+  /**
+   *
+   *     const singleSelectFieldList = await table.getFieldListByType(FieldType.SingleSelect);
+   *     console.log("singleSelectFieldList" , singleSelectFieldList);
+   *     const singleSelectField = await table.getField<ISingleSelectField>('fldjcTfyUC');
+   *     const options = await singleSelectField?.getOptions();
+   */
 
   const fieldMetas = (Array.isArray(fieldInfo?.fieldMetaList) &&
-    // 等待切换table的时候，拿到正确的fieldList
-    fieldInfo?.fieldList[0]?.tableId === tableInfo?.table.id &&
-    fieldInfo?.fieldMetaList.filter(({ type: _type }) => {
-      if (type === 'number') return f.includes(_type);
-      if (type === 'charts') return randomChartsSupportField.includes(_type)
-    })) || [];
+      // 等待切换table的时候，拿到正确的fieldList
+      fieldInfo?.fieldList[0]?.tableId === tableInfo?.table.id &&
+      fieldInfo?.fieldMetaList.filter(({ type: _type }) => {
+        return f.includes(_type);
+      })) || [];
 
   const fill = async () => {
     if (!fieldInfo?.field) {
       Toast.error(t('field.choose'));
       return;
     }
-    const { max, min, useInt, type, ...restFormValue } = formApi.current.getValues();
+    const { max, min, useInt,option, type, ...restFormValue } = formApi.current.getValues();
+    console.log("option", option);
 
-
-    // 定长度
-    restFormValue.minLength = restFormValue.maxLength
-
-
-    if (type === 'number') {
-      if (max === undefined || min === undefined) {
-        Toast.error(t('value.choose'));
-        return;
-      }
-    }
-    if (type === 'charts') {
-      if (restFormValue.maxLength === undefined || restFormValue.minLength === undefined) {
-        Toast.error(t('value.choose'));
-        return;
-      }
-      if (restFormValue.chartsRange === undefined) {
-        Toast.error(t("charts.not.empty"));
-        return;
-      }
-      try {
-        const newValue = JSON.parse(String(restFormValue.chartsRange))
-        restFormValue.chartsRange = typeof newValue === 'number' ? String(newValue) : newValue
-      } catch (error) {
-        console.error(error)
-      }
-      try {
-        if (restFormValue.excludeWords) {
-          restFormValue.excludeWords = JSON.parse(restFormValue.excludeWords)
-        }
-      } catch (error) {
-        Toast.error('排除字段必须为数组')
-        return;
-      }
-    }
-
-    let getRandom: any = getRandomFloat
-    if (useInt) {
-      getRandom = getRandomInt
-    }
-    if (type === 'charts') {
-      getRandom = randomCharts
-    }
     // 不同类型的单元格，获取属于它们对应的单元格的值
     let getCellValue: () => any = () => null;
-
     setLoading(true);
     switch (fieldInfo?.fieldMeta?.type) {
-      case FieldType.Number:
-      case FieldType.Rating:
-      case FieldType.Currency:
-        getCellValue = () => getRandom({ max, min, ...restFormValue })
-        break;
-      case FieldType.Text:
-        getCellValue = () => ([{ type: IOpenSegmentType.Text, text: String(getRandom({ max, min, ...restFormValue })) }])
+      // case FieldType.Number:
+      // case FieldType.Rating:
+      // case FieldType.Currency:
+      //   console.log('number', restFormValue)
+      //   getCellValue = () => getRandom({ max, min, ...restFormValue })
+      //   break;
+      // case FieldType.Text:
+      //   console.log('text', restFormValue)
+      //   getCellValue = () => ([{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}])
+      //   break;
+      case FieldType.SingleSelect:
+        // TODO
+        getCellValue = () => ({id: option, text: ""})
         break;
       default:
         break;
@@ -257,22 +250,22 @@ function Randomize() {
       recordIdList.delete(id!)
     })
 
-
-
-
-
     const toSetTask = [...recordIdList].map((recordId) => ({
       recordId,
       fields: {
         [fieldId]: getCellValue(),
       }
     }))
+
     let successCount = 0;
-    const step = 5000;
+    const step = 500;
     for (let index = 0; index < toSetTask.length; index += step) {
+      Toast.info(t( toSetTask.length))
       const element = toSetTask.slice(index, index + step);
       const sleep = element.length
+
       await tableInfo?.table.setRecords(element).then(() => {
+        console.log("element", element);
         successCount += element.length;
         setLoadingContent(t('success.num', { num: successCount }))
       }).catch((e) => {
@@ -297,19 +290,7 @@ function Randomize() {
         labelAlign='right'
         labelCol={{ span: 6 }}
         getFormApi={(e: any) => formApi.current = e}>
-        <Form.Select style={{ width: '100%' }} label={t('choose.mode')} field="type"
-          onChange={(v) => {
-            setType(v as any);
-            formApi.current.setValue('field', undefined);
-            setFieldInfo({
-              ...fieldInfo,
-              field: undefined,
-              fieldMeta: undefined
-            } as any)
-          }}>
-          <Form.Select.Option value={'number'}>{t("number.mode")}</Form.Select.Option>
-          <Form.Select.Option value={'charts'}>{t("password.mode")}</Form.Select.Option>
-        </Form.Select>
+
 
         <Form.Select style={{ width: '100%' }} onChange={onSelectTable} label='Table' field="table">
           {
@@ -321,57 +302,17 @@ function Randomize() {
             fieldMetas.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
           }
         </Form.Select>
+        <Form.Select style={{ width: '100%' }}  label={t('label.option')} field="option"  disabled={options.length === 0}>
+          {
+            options.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
+          }
+        </Form.Select>
 
-        {type === 'number' && <>
-          <Form.Input style={{ width: '100%' }} type="Number" label={t('label.max')} field="max">
-          </Form.Input>
-          <Form.Input style={{ width: '100%' }} type="Number" label={t('label.min')} field="min">
-          </Form.Input>
-        </>}
-        {<div style={{ display: type === 'charts' ? 'block' : 'none' }}>
-          <Form.InputNumber max={100} min={4} style={{ width: '100%' }} type="Number" label={t("max.length.3")} field="maxLength">
-          </Form.InputNumber>
-          {/* 
-                    <Form.InputNumber min={4} style={{ width: '100%' }} type="Number" label={t('长度最小值')} field="minLength">
-                    </Form.InputNumber>
-                    */}
-          <Form.TextArea
-            spellCheck="false"
-            label={{
-              text: t("chart.random"),
-              extra: <Tooltip content={<p style={{ whiteSpace: 'pre-wrap' }}>{t("chart.random.extra")}</p>}><IconHelpCircle style={{ color: 'var(--semi-color-text-2)' }} /></Tooltip>
-            }}
-            field="chartsRange">
-
-          </Form.TextArea>
-          {/* 
-                    <Form.TextArea
-                        spellCheck="false"
-                        label={{
-                            text: '排除掉某些词',
-                            extra: <Tooltip content={<p style={{ whiteSpace: 'pre-wrap' }}>{`格式如 ["abc","123"] \n随机值包含本字段数组中某个元素的时候，该随机值将会重新生成；为避免陷入死循环，尝试5次失败后，随机值将为空。\n使用数组的时候注意切换到英文的逗号`}</p>}><IconHelpCircle style={{ color: 'var(--semi-color-text-2)' }} /></Tooltip>
-                        }}
-                        field="excludeWords">
-                    </Form.TextArea> 
-                    */}
-        </div>}
-        {type === 'number' && <Form.Checkbox
-          label={
-            <div
-              style={{
-                marginTop: '-6px'
-              }}
-            >
-              {t('fill.btn')}
-            </div>
-          } field="useInt">
-
-        </Form.Checkbox>}
         <Row>
           <Col span={6}></Col>
           <Col span={18}>
             <Button theme="solid" type="primary" className="bt1" onClick={fill}>
-              {t('fill.btn2')}
+              {t('fill.btn')}
             </Button>
           </Col>
         </Row>
@@ -384,6 +325,9 @@ function getRandomFloat({ min, max }: { min: number, max: number }) {
   const _max = Math.max(min, max);
   const _min = Math.min(min, max)
   return Math.random() * (_max - _min) + _min;
+}
+function getDefaultValue(min: any) {
+  return min;
 }
 
 function getRandomInt({ min, max }: { min: number, max: number }) {

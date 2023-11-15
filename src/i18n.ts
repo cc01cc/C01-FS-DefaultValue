@@ -3,10 +3,9 @@ import { initReactI18next } from 'react-i18next';
 
 import translationEN from './locales/en.json';
 import translationZH from './locales/zh.json';
-import translationVI from './locales/vi.json';
 
 // 设置支持的语言列表
-const supportedLanguages = ['en', 'zh', 'vi'];
+const supportedLanguages = ['en', 'zh'];
 
 
 export function initI18n(lang: 'en' | 'zh') {
@@ -18,9 +17,6 @@ export function initI18n(lang: 'en' | 'zh') {
       },
       zh: {
         translation: translationZH,
-      },
-      vi: {
-        translation: translationVI,
       },
     },
     lng: lang, // 设置默认语言
