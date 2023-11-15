@@ -6,9 +6,9 @@
   "set.err":"单元格填充失败",
   "success.num":"成功填充{{num}}个单元格",
   "set.some.err":"部分单元格填充失败",
-  "table.info":"用默认值填充字段中的空白记录",
+  "table.info":"用默认值填充单选字段中的空白记录",
   "label.field":"字段",
-  "label.option": "选项",
+  "label.option": "默认选项",
   "fill.btn":"填充默认值",
   "load_error.1":"运行项目后，请获取 webview 地址，粘贴至多维表格「扩展脚本」中使用。详见：",
   "load.guide":"开发指南"
