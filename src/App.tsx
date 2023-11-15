@@ -10,7 +10,7 @@ import {Form, Toast, Spin, Col, Row, Button} from "@douyinfe/semi-ui";
 import {useTranslation} from 'react-i18next';
 
 /** 支持填入默认值的字段 */
-const f = [FieldType.Number, FieldType.Rating, FieldType.Text, FieldType.SingleSelect]
+const f = [FieldType.SingleSelect]
 /** 表格，字段变化的时候刷新插件 */
 export default function Ap() {
     const [key, setKey] = useState<string | number>(0);
@@ -243,7 +243,6 @@ function InputDefaultValue() {
             const sleep = element.length
 
             await tableInfo?.table.setRecords(element).then(() => {
-                console.log("element", element);
                 successCount += element.length;
                 setLoadingContent(t('success.num', {num: successCount}))
             }).catch((e) => {
