@@ -198,7 +198,7 @@ function InputDefaultValue() {
         const {option} = formApi.current.getValues();
         console.log("option", option);
 
-        if (!option || !options || options.some(option => option)) {
+        if (!option || !options || !options.some(option => option)) {
             Toast.error(t('option.error'));
             return;
         }
