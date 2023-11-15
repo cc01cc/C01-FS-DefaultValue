@@ -198,6 +198,11 @@ function InputDefaultValue() {
         const {option} = formApi.current.getValues();
         console.log("option", option);
 
+        if (!option || !options || options.some(option => option)) {
+            Toast.error(t('option.error'));
+            return;
+        }
+
         // 不同类型的单元格，获取属于它们对应的单元格的值
         let getCellValue: () => any = () => null;
         setLoading(true);
@@ -282,11 +287,9 @@ function InputDefaultValue() {
                                                                            value={id}>{name}</Form.Select.Option>)
                     }
                 </Form.Select>
-                <Form.Select style={{width: '100%'}} label={t('label.option')} field="option"
-                             disabled={options === undefined || options.length === 0}>
+                <Form.Select style={{ width: '100%' }} label={t('label.option')} field="option" disabled={!options || options.length === 0} >
                     {
-                        options?.map(({id, name}) => <Form.Select.Option key={id}
-                                                                         value={id}>{name}</Form.Select.Option>)
+                        options?.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name || "null"}</Form.Select.Option>)
                     }
                 </Form.Select>
 

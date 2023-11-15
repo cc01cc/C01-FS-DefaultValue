@@ -11,5 +11,6 @@
   "label.option": "默认选项",
   "fill.btn":"填充默认值",
   "load_error.1":"运行项目后，请获取 webview 地址，粘贴至多维表格「扩展脚本」中使用。详见：",
-  "load.guide":"开发指南"
+  "load.guide":"开发指南",
+  "option.error":"选项错误"
 }

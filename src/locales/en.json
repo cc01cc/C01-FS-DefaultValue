@@ -11,5 +11,6 @@
 "label.option": "Default Option",
 "fill.btn": "Fill with Default Value",
 "load_error.1":"After running the project, please get the webview address and paste it into the multidimensional table \"Extended Script\" for use. See: ",
-  "load.guide": "Development Guide"
+  "load.guide": "Development Guide",
+  "option.error":"option error"
 }
