@@ -204,23 +204,21 @@ function InputDefaultValue() {
             }
         }
     }
-
-    const fieldMetas = (Array.isArray(fieldInfo?.fieldMetaList) &&
-        // 等待切换table的时候，拿到正确的fieldList
-        fieldInfo?.fieldList[0]?.tableId === tableInfo?.table.id &&
-        fieldInfo?.fieldMetaList.filter(({type: _type}) => {
-            return f.includes(_type);
-        })) || [];
-
+    const onSelectOption = async () => {
+        // 关闭开关
+        formApi.current.setValue('autoInput', false);
+        await openAutoInput(false);
+    }
     const clickFill = async (f: any) => {
         const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
+
         await fill(tableInfo, fieldInfo, defaultValue, setLoading, setLoadingContent, t);
     }
 
     const openAutoInput = async (v: boolean) => {
-        const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
         console.log("v", v);
         if (v) {
+            const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
             // @ts-ignore
             window.off && window.off.constructor === Function && window.off()
             if (!fieldInfo || !fieldInfo.field) {
@@ -248,17 +246,14 @@ function InputDefaultValue() {
             window.off && window.off.constructor === Function && window.off()
         }
     }
-    // function autoInput() {
-    //     if (v) {
-    //         formApi.current.setValues({
-    //             autoInput: true
-    //         })
-    //     } else {
-    //         formApi.current.setValues({
-    //             autoInput: false
-    //         })
-    //     }
-    // }
+
+    const fieldMetas = (Array.isArray(fieldInfo?.fieldMetaList) &&
+        // 等待切换table的时候，拿到正确的fieldList
+        fieldInfo?.fieldList[0]?.tableId === tableInfo?.table.id &&
+        fieldInfo?.fieldMetaList.filter(({type: _type}) => {
+            return f.includes(_type);
+        })) || [];
+
 
     return <div>
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
@@ -282,7 +277,7 @@ function InputDefaultValue() {
                                                                            value={id}>{name}</Form.Select.Option>)
                     }
                 </Form.Select>
-                <Form.Select style={{width: '100%'}} label={t('label.option')} field="option"
+                <Form.Select style={{width: '100%'}} label={t('label.option')} onChange={onSelectOption} field="option"
                              disabled={!options || options.length === 0}>
                     {
                         options?.map(({id, name}) => <Form.Select.Option key={id}
