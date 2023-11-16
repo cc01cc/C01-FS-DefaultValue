@@ -18,13 +18,14 @@ import {
     bitable,
     FieldType,
     IField,
+    IFieldMeta,
     IFieldMeta as FieldMeta,
     ISelectFieldOption,
     ISingleSelectField,
     ITable,
     ITableMeta
 } from "@lark-base-open/js-sdk";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {RefObject, useEffect, useMemo, useRef, useState} from "react";
 import {Button, Col, Form, Row, Spin, Toast} from "@douyinfe/semi-ui";
 import {useTranslation} from 'react-i18next';
 import fill from "./FillDefaultValue";
@@ -209,10 +210,86 @@ function InputDefaultValue() {
         fieldInfo?.fieldMetaList.filter(({type: _type}) => {
             return f.includes(_type);
         })) || [];
+    /**
+     * 获取默认值
+     */
+
 
     const clickFill = async (f: any) => {
-        await fill(tableInfo, fieldInfo, options, formApi, setLoading, setLoadingContent, t);
+        const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
+        await fill(tableInfo, fieldInfo, defaultValue, setLoading, setLoadingContent, t);
     }
+
+    const openAutoInput = async (v: boolean) => {
+        const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
+        console.log("v", v);
+        if (v) {
+            // @ts-ignore
+            window.off && window.off.constructor === Function && window.off()
+            // window.off = tableInfo.table.onRecordAdd(async (event) => {
+            //     let data = event.data
+            //     console.log("data", data);
+            if (!fieldInfo || !fieldInfo.field) {
+                console.error("error")
+                return;
+            }
+            const fieldId = fieldInfo.field.id;
+            //     const toSetRecord = [...recordIdList].map((recordId) => ({
+            //         recordId,
+            //         fields: {
+            //             [fieldId]: defaultValue,
+            //         }
+            //     }))
+            // @ts-ignore
+            window.off = tableInfo.table.onRecordAdd(async (ev) => {
+                const recordList = ev.data;
+                console.log("recordList", recordList);
+                const toSetTask = recordList.map((recordId) => ({
+                    recordId,
+                    fields: {
+                        [fieldId]: defaultValue,
+                    }
+                }));
+                console.log("toSetRecord", toSetTask);
+                console.log("toSeask", toSetTask);
+                let successCount = 0;
+                console.log("toSetTask", toSetTask.length);
+                const step = 500;
+                for (let index = 0; index < toSetTask.length; index += step) {
+                    Toast.info(t(toSetTask.length))
+                    const element = toSetTask.slice(index, index + step);
+                    const sleep = element.length
+
+                    await tableInfo?.table.setRecords(element).then(() => {
+                        successCount += element.length;
+                        setLoadingContent(t('success.num', {num: successCount}))
+                    }).catch((e) => {
+                        console.error(e)
+                    });
+                    await new Promise((resolve) => {
+                        setTimeout(() => {
+                            resolve('')
+                        }, sleep);
+                    })
+                }
+            })
+        } else {
+            // 关闭监听
+            // @ts-ignore
+            window.off && window.off.constructor === Function && window.off()
+        }
+    }
+    // function autoInput() {
+    //     if (v) {
+    //         formApi.current.setValues({
+    //             autoInput: true
+    //         })
+    //     } else {
+    //         formApi.current.setValues({
+    //             autoInput: false
+    //         })
+    //     }
+    // }
 
     return <div>
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
@@ -244,13 +321,59 @@ function InputDefaultValue() {
 
                 <Row>
                     <Col span={6}></Col>
-                    <Col span={18}>
+                    <Col span={10}>
                         <Button theme="solid" type="primary" className="bt1" onClick={clickFill}>
                             {t('fill.btn')}
                         </Button>
+                    </Col>
+
+                </Row>
+                <Row>
+                    <Col span={300}>
+                        <Form.Switch field="autoInput" label={{text: '自动填充新记录', width: '100%'}} checkedText='开'
+                                     uncheckedText='关' onChange={(v) => openAutoInput(v)}/>
                     </Col>
                 </Row>
             </Form>
         </Spin>
     </div>
+}
+
+// 不同类型的单元格，获取属于它们对应的单元格的值
+const getCellValue = async (options: ISelectFieldOption[] | undefined, formApi: RefObject<any>, setLoading: any, fieldInfo: {
+    field: IField | undefined;
+    fieldMeta: IFieldMeta | undefined;
+    fieldList: IField[];
+    fieldMetaList: IFieldMeta[]
+} | undefined, t: any) => {
+    const {option} = formApi.current.getValues();
+    console.log("option", option);
+
+    if (!option || !options || !options.some(option => option)) {
+        Toast.error(t('option.error'));
+        return;
+    }
+    let value = null;
+    setLoading(true);
+    switch (fieldInfo?.fieldMeta?.type) {
+        // case FieldType.Number:
+        // case FieldType.Rating:
+        // case FieldType.Currency:
+        // case FieldType.Text:
+        //   // console.log('number', restFormValue)
+        //   value = getRandom({ max, min, ...restFormValue })
+        //   break;
+        // case FieldType.Text:
+        //   console.log('text', restFormValue)
+        //   value = [{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}]
+        //   break;
+        case FieldType.SingleSelect:
+            // TODO
+            value = {id: option, text: ""}
+            break;
+        default:
+            break;
+    }
+    setLoading(false);
+    return value;
 }
