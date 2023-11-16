@@ -17,6 +17,7 @@
 import {Toast} from "@douyinfe/semi-ui";
 import {IField, IFieldMeta, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 import {Utils} from "./Utils";
+import {useTranslation} from "react-i18next";
 
 const fill = async (tableInfo: {
                         table: ITable;
@@ -30,11 +31,9 @@ const fill = async (tableInfo: {
                         fieldList: IField[];
                         fieldMetaList: IFieldMeta[]
                     } | undefined,
-                    defaultValue: any,
-                    setLoading: any,
-                    setLoadingContent: any,
-                    t: any) => {
+                    defaultValue: any) => {
     if (!fieldInfo?.field) {
+        const {t} = useTranslation();
         Toast.error(t('field.choose'));
         return;
     }
@@ -55,6 +54,6 @@ const fill = async (tableInfo: {
         }
     }))
 
-    await Utils.setRecords(toSetTask, tableInfo, setLoading, setLoadingContent, t);
+    await Utils.setRecords(toSetTask, tableInfo);
 }
 export default fill;

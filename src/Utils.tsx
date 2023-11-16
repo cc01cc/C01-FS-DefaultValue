@@ -17,18 +17,17 @@
 import {Toast} from "@douyinfe/semi-ui";
 
 export class Utils {
-    static async setRecords(toSetTask: any, tableInfo: any, setLoading: any, setLoadingContent: any, t: any) {
+    static async setRecords(toSetTask: any, tableInfo: any) {
         let successCount = 0;
         console.log("toSetTask", toSetTask.length);
         const step = 500;
         for (let index = 0; index < toSetTask.length; index += step) {
-            Toast.info(t(toSetTask.length))
+            Toast.info("已填充" + toSetTask.length + "条记录")
             const element = toSetTask.slice(index, index + step);
             const sleep = element.length
 
             await tableInfo?.table.setRecords(element).then(() => {
                 successCount += element.length;
-                setLoadingContent(t('success.num', {num: successCount}))
             }).catch((e: any) => {
                 console.error(e)
             });
@@ -38,7 +37,5 @@ export class Utils {
                 }, sleep);
             })
         }
-        setLoading(false)
-        setLoadingContent('')
     }
 }

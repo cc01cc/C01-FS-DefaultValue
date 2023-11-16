@@ -212,7 +212,7 @@ function InputDefaultValue() {
     const clickFill = async (f: any) => {
         const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
 
-        await fill(tableInfo, fieldInfo, defaultValue, setLoading, setLoadingContent, t);
+        await fill(tableInfo, fieldInfo, defaultValue);
     }
 
     const openAutoInput = async (v: boolean) => {
@@ -238,7 +238,7 @@ function InputDefaultValue() {
                 }));
                 console.log("toSetRecord", toSetTask);
                 console.log("toSeask", toSetTask);
-                await Utils.setRecords(toSetTask, tableInfo, setLoading, setLoadingContent, t);
+                await Utils.setRecords(toSetTask, tableInfo);
             })
         } else {
             // 关闭监听
