@@ -40,8 +40,6 @@ const fill = async (tableInfo: {
     }
 
 
-
-
     /** 空的单元格行id */
     const recordIdList = new Set((await tableInfo?.table.getRecordIdList()));
     const fieldValueList = (await fieldInfo.field.getFieldValueList()).map(({record_id}) => record_id);

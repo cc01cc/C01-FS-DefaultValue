@@ -211,10 +211,6 @@ function InputDefaultValue() {
         fieldInfo?.fieldMetaList.filter(({type: _type}) => {
             return f.includes(_type);
         })) || [];
-    /**
-     * 获取默认值
-     */
-
 
     const clickFill = async (f: any) => {
         const defaultValue = await getCellValue(options, formApi, setLoading, fieldInfo, t)
@@ -227,20 +223,11 @@ function InputDefaultValue() {
         if (v) {
             // @ts-ignore
             window.off && window.off.constructor === Function && window.off()
-            // window.off = tableInfo.table.onRecordAdd(async (event) => {
-            //     let data = event.data
-            //     console.log("data", data);
             if (!fieldInfo || !fieldInfo.field) {
                 console.error("error")
                 return;
             }
             const fieldId = fieldInfo.field.id;
-            //     const toSetRecord = [...recordIdList].map((recordId) => ({
-            //         recordId,
-            //         fields: {
-            //             [fieldId]: defaultValue,
-            //         }
-            //     }))
             // @ts-ignore
             window.off = tableInfo.table.onRecordAdd(async (ev) => {
                 const recordList = ev.data;
@@ -295,9 +282,11 @@ function InputDefaultValue() {
                                                                            value={id}>{name}</Form.Select.Option>)
                     }
                 </Form.Select>
-                <Form.Select style={{ width: '100%' }} label={t('label.option')} field="option" disabled={!options || options.length === 0} >
+                <Form.Select style={{width: '100%'}} label={t('label.option')} field="option"
+                             disabled={!options || options.length === 0}>
                     {
-                        options?.map(({ id, name }) => <Form.Select.Option key={id} value={id}>{name || "null"}</Form.Select.Option>)
+                        options?.map(({id, name}) => <Form.Select.Option key={id}
+                                                                         value={id}>{name || "null"}</Form.Select.Option>)
                     }
                 </Form.Select>
 
@@ -338,6 +327,7 @@ const getCellValue = async (options: ISelectFieldOption[] | undefined, formApi: 
     let value = null;
     setLoading(true);
     switch (fieldInfo?.fieldMeta?.type) {
+        // TODO 支持更多类型
         // case FieldType.Number:
         // case FieldType.Rating:
         // case FieldType.Currency:
@@ -350,7 +340,6 @@ const getCellValue = async (options: ISelectFieldOption[] | undefined, formApi: 
         //   value = [{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}]
         //   break;
         case FieldType.SingleSelect:
-            // TODO
             value = {id: option, text: ""}
             break;
         default:
