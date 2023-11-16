@@ -29,7 +29,7 @@ export class Utils {
             await tableInfo?.table.setRecords(element).then(() => {
                 successCount += element.length;
                 setLoadingContent(t('success.num', {num: successCount}))
-            }).catch((e) => {
+            }).catch((e: any) => {
                 console.error(e)
             });
             await new Promise((resolve) => {
@@ -38,5 +38,7 @@ export class Utils {
                 }, sleep);
             })
         }
+        setLoading(false)
+        setLoadingContent('')
     }
 }

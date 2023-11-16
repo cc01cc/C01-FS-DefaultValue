@@ -15,7 +15,8 @@
  */
 
 import {Toast} from "@douyinfe/semi-ui";
-import {FieldType, IField, IFieldMeta, ISelectFieldOption, ITable, ITableMeta} from "@lark-base-open/js-sdk";
+import {IField, IFieldMeta, ITable, ITableMeta} from "@lark-base-open/js-sdk";
+import {Utils} from "./Utils";
 
 const fill = async (tableInfo: {
                         table: ITable;
@@ -29,8 +30,7 @@ const fill = async (tableInfo: {
                         fieldList: IField[];
                         fieldMetaList: IFieldMeta[]
                     } | undefined,
-                    options: ISelectFieldOption[] | undefined,
-                    formApi: any,
+                    defaultValue: any,
                     setLoading: any,
                     setLoadingContent: any,
                     t: any) => {
@@ -38,36 +38,9 @@ const fill = async (tableInfo: {
         Toast.error(t('field.choose'));
         return;
     }
-    const {option} = formApi.current.getValues();
-    console.log("option", option);
 
-    if (!option || !options || !options.some(option => option)) {
-        Toast.error(t('option.error'));
-        return;
-    }
 
-    // 不同类型的单元格，获取属于它们对应的单元格的值
-    let getCellValue: () => any = () => null;
-    setLoading(true);
-    switch (fieldInfo?.fieldMeta?.type) {
-        // case FieldType.Number:
-        // case FieldType.Rating:
-        // case FieldType.Currency:
-        // case FieldType.Text:
-        //   // console.log('number', restFormValue)
-        //   getCellValue = () => getRandom({ max, min, ...restFormValue })
-        //   break;
-        // case FieldType.Text:
-        //   console.log('text', restFormValue)
-        //   getCellValue = () => ([{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}])
-        //   break;
-        case FieldType.SingleSelect:
-            // TODO
-            getCellValue = () => ({id: option, text: ""})
-            break;
-        default:
-            break;
-    }
+
 
     /** 空的单元格行id */
     const recordIdList = new Set((await tableInfo?.table.getRecordIdList()));
@@ -80,31 +53,10 @@ const fill = async (tableInfo: {
     const toSetTask = [...recordIdList].map((recordId) => ({
         recordId,
         fields: {
-            [fieldId]: getCellValue(),
+            [fieldId]: defaultValue,
         }
     }))
 
-    let successCount = 0;
-    const step = 500;
-    for (let index = 0; index < toSetTask.length; index += step) {
-        Toast.info(t(toSetTask.length))
-        const element = toSetTask.slice(index, index + step);
-        const sleep = element.length
-
-        await tableInfo?.table.setRecords(element).then(() => {
-            successCount += element.length;
-            setLoadingContent(t('success.num', {num: successCount}))
-        }).catch((e) => {
-            console.error(e)
-        });
-        await new Promise((resolve) => {
-            setTimeout(() => {
-                resolve('')
-            }, sleep);
-        })
-    }
-
-    setLoading(false)
-    setLoadingContent('')
+    await Utils.setRecords(toSetTask, tableInfo, setLoading, setLoadingContent, t);
 }
 export default fill;
