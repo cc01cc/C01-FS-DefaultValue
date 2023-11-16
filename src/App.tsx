@@ -29,6 +29,7 @@ import {RefObject, useEffect, useMemo, useRef, useState} from "react";
 import {Button, Col, Form, Row, Spin, Toast} from "@douyinfe/semi-ui";
 import {useTranslation} from 'react-i18next';
 import fill from "./FillDefaultValue";
+import {Utils} from "./Utils";
 
 /** 支持填入默认值的字段 */
 const f = [FieldType.SingleSelect]
@@ -252,26 +253,7 @@ function InputDefaultValue() {
                 }));
                 console.log("toSetRecord", toSetTask);
                 console.log("toSeask", toSetTask);
-                let successCount = 0;
-                console.log("toSetTask", toSetTask.length);
-                const step = 500;
-                for (let index = 0; index < toSetTask.length; index += step) {
-                    Toast.info(t(toSetTask.length))
-                    const element = toSetTask.slice(index, index + step);
-                    const sleep = element.length
-
-                    await tableInfo?.table.setRecords(element).then(() => {
-                        successCount += element.length;
-                        setLoadingContent(t('success.num', {num: successCount}))
-                    }).catch((e) => {
-                        console.error(e)
-                    });
-                    await new Promise((resolve) => {
-                        setTimeout(() => {
-                            resolve('')
-                        }, sleep);
-                    })
-                }
+                await Utils.setRecords(toSetTask, tableInfo, setLoading, setLoadingContent, t);
             })
         } else {
             // 关闭监听
