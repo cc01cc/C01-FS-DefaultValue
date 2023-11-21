@@ -197,11 +197,11 @@ function ArrayFieldForm() {
                                         label={`字段名`}
                                         style={{width: 120, marginRight: 20}}
                                         onChange={onSelectField}
-                                        optionList={[
-                                            {label: 'Engineer', value: 'Engineer'},
-                                            {label: 'Designer', value: 'Designer'},
-                                        ]}
                                     >
+                                        {
+                                            fieldListCanChoose.map(({id, name}) => <Form.Select.Option key={id}
+                                                                                                       value={id}>{name}</Form.Select.Option>)
+                                        }
                                     </Form.Select>
                                     <Form.Select
                                         field={`${field}[defaultValue]`}
@@ -212,6 +212,7 @@ function ArrayFieldForm() {
                                             {label: 'Designer', value: 'Designer'},
                                         ]}
                                     >
+
                                     </Form.Select>
                                     <Button
                                         theme="solid"
