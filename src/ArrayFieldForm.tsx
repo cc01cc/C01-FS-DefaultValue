@@ -34,13 +34,18 @@ function ArrayFieldForm() {
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
 
-    const [fieldListCanChoose, setFieldListCanChoose] = useState<{ name: string, id: string; }[]>([]);
+    const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ name: string, id: string; }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
-    let arrayFields: any = [];
+    const [arrayFields, setArrayFields] = useState([]);
+
     const ComponentUsingFormState = () => {
         const formState = useFormState();
-        console.log("formState", formState);
-        arrayFields = formState.values.field;
+        // console.log("formState", formState);
+        // arrayFields = formState.values.field;
+        useEffect(() => {
+            console.log('formState.values.field', formState.values.field)
+            setArrayFields(formState.values.field || []);
+        }, [formState.values.field]);
         return null;
     };
     /**
@@ -111,9 +116,9 @@ function ArrayFieldForm() {
         // 初始化可选字段数组列表，数组长度为表字段数量，初始时，每个元素包含所有字段
         const fill = new Array(fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
         console.log('fill', fill)
-        setFieldListCanChoose(fieldMetaList.map(({name, id}) => ({name, id})))
+        setFieldListCanChooseList(fill)
         setLoading(false)
-        console.log('fieldListCanChoose', fieldListCanChoose)
+        console.log('fieldListCanChooseList', fieldListCanChooseList)
     }
 
     /**
@@ -127,25 +132,48 @@ function ArrayFieldForm() {
             ]
         })
     }
+
+    useEffect(() => {
+        console.log('arrayFields', arrayFields)
+        console.log('arrayFields[0]', arrayFields[0])
+    }, [arrayFields])
     const onSelectField = async () => {
         // console.log('value', selectedId)
         // console.log('fieldIndex', fieldIndex)
         console.log('formApi', formApi.current.formState)
         // const arrayFields = formApi.current.getValue('field');
-        console.log('arrayFields', arrayFields)
-        console.log('fieldListCanChoose', fieldListCanChoose)
+        // console.log('arrayFields', arrayFields)
+        // console.log('fieldListCanChooseList', fieldListCanChooseList)
 
-        const tempFieldListCanChoose = fieldInfo?.fieldMetaList.filter(({id}) => {
+        // 1. 遍历 arrayFields，获取每个字段的 id
+        // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
+        // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
+        // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
+        const tempFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
+        for (let i = 0; i < arrayFields.length; i++) {
+            // console.log('arrayFields[i]', arrayFields[i])
+            const arrayField = arrayFields[i];
 
-            return !arrayFields.some((item: any) => item.name === id);
-        }).map(({name, id}) => ({name, id}));
-
-        if (!tempFieldListCanChoose) {
-            Toast.error('更新字段信息失败')
-            return;
+            const field = arrayField.name;
+            if (!field) {
+                console.log(i, 'field is undefined')
+                continue;
+            }
+            // 将当前字段的 id 加入 tempFieldListCanChoose
+            if (!fieldInfo) {
+                Toast.error('获取字段信息失败')
+                return;
+            }
+            let tempFieldListCanChoose = fieldInfo.fieldMetaList.filter(({id}) => {
+                console.log('field', field, 'id', id)
+                return id !== field
+            });
+            tempFieldListCanChoose.push(fieldInfo?.fieldMetaList.find(({id}) => id === field)!)
+            tempFieldListCanChooseList[i] = tempFieldListCanChoose.map(({name, id}) => ({name, id}))
         }
-        console.log('tempFieldListCanChoose', tempFieldListCanChoose)
-        setFieldListCanChoose(tempFieldListCanChoose);
+        console.log('tempFieldListCanChooseList', tempFieldListCanChooseList)
+        setFieldListCanChooseList(tempFieldListCanChooseList)
+
     }
     const onSelectTable = async (t: any) => {
         setLoading(true);
@@ -181,7 +209,7 @@ function ArrayFieldForm() {
         }
         const fill = new Array(fieldInfo.fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
         console.log('fill', fill)
-        setFieldListCanChoose(fieldMetaList.map(({name, id}) => ({name, id})))
+        setFieldListCanChooseList(fill)
         setLoading(false)
     }
 
@@ -240,8 +268,9 @@ function ArrayFieldForm() {
                                             onSelect={(selectedId) => onSelectField()}
                                         >
                                             {
-                                                fieldListCanChoose.map(({id, name}) => <Form.Select.Option key={id}
-                                                                                                              value={id}>{name}</Form.Select.Option>)
+                                                fieldListCanChooseList[i].map(({id, name}) => <Form.Select.Option
+                                                    key={id}
+                                                    value={id}>{name}</Form.Select.Option>)
                                             }
                                         </Form.Select>
                                         <Form.Select
