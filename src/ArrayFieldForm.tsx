@@ -14,11 +14,12 @@
  *    limitations under the License.
  */
 
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import useTableFieldState from "./hooks/useTableFieldState";
 import {bitable} from "@lark-base-open/js-sdk";
+import {debounce} from 'lodash';
 
 function ArrayFieldForm() {
     const {
@@ -34,18 +35,21 @@ function ArrayFieldForm() {
     const formApi = useRef<any>();
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
-
+    const [debouncedArrayFields, setDebouncedArrayFields] = useState<{}[]>([]);
     const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ name: string, id: string; }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
     const [arrayFields, setArrayFields] = useState<{}[]>([]);
+
+    // 创建防抖函数
+    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 1000), []);
+
 
     const ComponentUsingFormState = () => {
         const formState = useFormState();
         // console.log("formState", formState);
         // arrayFields = formState.values.field;
         useEffect(() => {
-            console.log('formState.values.field', formState.values.field)
-            setArrayFields([...(formState.values.field || [])]);
+            debouncedSetArrayFields([...(formState.values.field || [])]);
             console.log('arrayFields in component', arrayFields)
         }, [formState.values.field]);
         return null;
@@ -136,6 +140,7 @@ function ArrayFieldForm() {
     }
 
     useEffect(() => {
+        // debouncedSetArrayFields(arrayFields);
         console.log('arrayFields', arrayFields)
         console.log('arrayFields[0]', arrayFields[0])
     }, [arrayFields])
