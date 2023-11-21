@@ -35,7 +35,7 @@ function ArrayFieldForm() {
     const formApi = useRef<any>();
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
-    const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ name: string, id: string; }[][]>([]);
+    const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ id: string, name: string }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
     const [arrayFields, setArrayFields] = useState<{ name: string, defaultValue: string, autoInput: boolean }[]>([]);
 
@@ -144,36 +144,53 @@ function ArrayFieldForm() {
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
         // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
         const tempFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
-        for (let i = 0; i < arrayFields.length; i++) {
-            // console.log('arrayFields[i]', arrayFields[i])
-            const field = arrayFields[i].name;
 
-            if (!field) {
-                console.log(i, 'field is undefined')
-                continue;
-            }
-            // 将当前字段的 id 加入 tempFieldListCanChoose
-            if (!fieldInfo) {
-                Toast.error('获取字段信息失败')
-                return;
-            }
-            let tempFieldListCanChoose = fieldInfo.fieldMetaList.filter(({id}) => {
-                console.log('field', field, 'id', id)
-                return id !== field
-            });
-            tempFieldListCanChoose.push(fieldInfo?.fieldMetaList.find(({id}) => id === field)!)
-            tempFieldListCanChooseList[i] = tempFieldListCanChoose.map(({name, id}) => ({name, id}))
-        }
-        console.log('tempFieldListCanChooseList', tempFieldListCanChooseList)
-        setFieldListCanChooseList(tempFieldListCanChooseList)
 
+        const tempFieldListCanChoose = fieldInfo?.fieldMetaList.filter(({id}) => {
+                for (let i = 0; i < arrayFields.length; i++) {
+                    const field = arrayFields[i].name;
+
+                    if (!field) {
+                        // console.log(i, 'field is undefined')
+                        continue;
+                    }
+                    // 将当前字段的 id 加入 tempFieldListCanChoose
+                    if (!fieldInfo) {
+                        Toast.error('获取字段信息失败')
+                        return;
+                    }
+                    if (id === field) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        ).map(({id, name}) => ({id, name}));
+        console.log('tempFieldListCanChoose', tempFieldListCanChoose)
+        // 将已经选择的字段添加到各自的候选框中
+        arrayFields.forEach((field, index) => {
+            let specialFieldListCanChoose = tempFieldListCanChoose;
+            console.log(index, 'before specialFieldListCanChoose', specialFieldListCanChoose)
+            const findField = fieldInfo?.fieldMetaList.find(({id}) => id === field.name);
+            console.log(index, 'findField', findField)
+            if (!findField) {
+                return
+            }
+            if (findField && findField.id && findField.name) {
+                specialFieldListCanChoose?.push({id: findField.id, name: findField.name});
+            }
+            console.log(index, 'specialFieldListCanChoose', specialFieldListCanChoose)
+            if (!specialFieldListCanChoose) {
+                return
+            }
+            fieldListCanChooseList.push(specialFieldListCanChoose)
+        })
 
     }, [arrayFields])
     const onSelectField = async () => {
         // console.log('value', selectedId)
         // console.log('fieldIndex', fieldIndex)
         console.log('formApi', formApi.current.formState)
-
 
 
     }
