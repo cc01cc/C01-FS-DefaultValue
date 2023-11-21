@@ -35,19 +35,15 @@ function ArrayFieldForm() {
     const formApi = useRef<any>();
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
-    const [debouncedArrayFields, setDebouncedArrayFields] = useState<{}[]>([]);
     const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ name: string, id: string; }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
-    const [arrayFields, setArrayFields] = useState<{}[]>([]);
+    const [arrayFields, setArrayFields] = useState<{ name: string, defaultValue: string, autoInput: boolean }[]>([]);
 
     // 创建防抖函数
-    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 1000), []);
-
+    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 5000), []);
 
     const ComponentUsingFormState = () => {
         const formState = useFormState();
-        // console.log("formState", formState);
-        // arrayFields = formState.values.field;
         useEffect(() => {
             debouncedSetArrayFields([...(formState.values.field || [])]);
             console.log('arrayFields in component', arrayFields)
@@ -143,25 +139,15 @@ function ArrayFieldForm() {
         // debouncedSetArrayFields(arrayFields);
         console.log('arrayFields', arrayFields)
         console.log('arrayFields[0]', arrayFields[0])
-    }, [arrayFields])
-    const onSelectField = async () => {
-        // console.log('value', selectedId)
-        // console.log('fieldIndex', fieldIndex)
-        console.log('formApi', formApi.current.formState)
-        // const arrayFields = formApi.current.getValue('field');
-        // console.log('arrayFields', arrayFields)
-        // console.log('fieldListCanChooseList', fieldListCanChooseList)
-
-        // 1. 遍历 arrayFields，获取每个字段的 id
+// 1. 遍历 arrayFields，获取每个字段的 id
         // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
         // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
         const tempFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
         for (let i = 0; i < arrayFields.length; i++) {
             // console.log('arrayFields[i]', arrayFields[i])
-            const arrayField = arrayFields[i];
+            const field = arrayFields[i].name;
 
-            const field = arrayField.name;
             if (!field) {
                 console.log(i, 'field is undefined')
                 continue;
@@ -180,6 +166,15 @@ function ArrayFieldForm() {
         }
         console.log('tempFieldListCanChooseList', tempFieldListCanChooseList)
         setFieldListCanChooseList(tempFieldListCanChooseList)
+
+
+    }, [arrayFields])
+    const onSelectField = async () => {
+        // console.log('value', selectedId)
+        // console.log('fieldIndex', fieldIndex)
+        console.log('formApi', formApi.current.formState)
+
+
 
     }
     const onSelectTable = async (t: any) => {
