@@ -15,9 +15,10 @@
  */
 
 import React, {useEffect, useRef, useState} from 'react';
-import {ArrayField, Button, Form} from '@douyinfe/semi-ui';
+import {ArrayField, Button, Form, Toast} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import useTableFieldState from "./hooks/useTableFieldState";
+import {bitable} from "@lark-base-open/js-sdk";
 
 function ArrayFieldForm() {
     const {
@@ -32,13 +33,55 @@ function ArrayFieldForm() {
     const formApi = useRef<any>();
 
 
+    /**
+     * 初始化
+     */
     useEffect(() => {
         setData([
             {name: 'Engineer', defaultValue: 'Engineer'},
             {name: 'Designer', defaultValue: 'Designer'},
         ])
+
+        async function init() {
+
+        }
+
+        init().catch((e) => {
+            Toast.error('table.err')
+            console.error(e)
+        });
     }, []);
-    // 复用上一次的记录
+
+    const fetchNewInfo = async () => {
+        const selection = await bitable.base.getSelection();
+        console.log("selection", selection);
+        if (selection.tableId) {
+            const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
+                bitable.base.getTableById(selection.tableId),
+                bitable.base.getTableMetaList(),
+                bitable.base.getTableList()
+            ])
+            setTableInfo({
+                table: tableRes,
+                tableMeta: tableMetaListRes.find(({id}) => tableRes.id === id)!,
+                tableMetaList: tableMetaListRes.filter(({name}) => name),
+                tableList: tableListRes
+            });
+
+            const fieldMetaList = await tableRes.getFieldMetaList();
+            const fieldList = await tableRes.getFieldList();
+            setFieldInfo({
+                fieldList,
+                fieldMetaList,
+                field: undefined,
+                fieldMeta: undefined
+            })
+        }
+    }
+
+    /**
+     * 复用上一次的记录
+     */
     const useLastRecord = () => {
         formApi.current.setValues({
             field: [
@@ -105,6 +148,15 @@ function ArrayFieldForm() {
                     style={{margin: 12, alignSelf: 'flex-end'}}
                 >
                     {"复用上一次记录"}
+                </Button>
+                <Button
+                    theme="solid"
+                    type="primary"
+                    className="bt1"
+                    onClick={fetchNewInfo}
+                    style={{margin: 12, alignSelf: 'flex-end'}}
+                >
+                    {"刷新数据"}
                 </Button>
             </div>
 
@@ -196,7 +248,6 @@ function ArrayFieldForm() {
                     style={{margin: 12, alignSelf: 'flex-end'}}
                 >重置</Button>
             </div>
-            {/*<ComponentWithFormState />*/}
         </Form>
     );
 }
