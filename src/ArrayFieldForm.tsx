@@ -37,7 +37,7 @@ function ArrayFieldForm() {
 
     const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ name: string, id: string; }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
-    const [arrayFields, setArrayFields] = useState([]);
+    const [arrayFields, setArrayFields] = useState<{}[]>([]);
 
     const ComponentUsingFormState = () => {
         const formState = useFormState();
@@ -45,9 +45,8 @@ function ArrayFieldForm() {
         // arrayFields = formState.values.field;
         useEffect(() => {
             console.log('formState.values.field', formState.values.field)
-            setArrayFields(formState.values.field || []);
+            setArrayFields([...(formState.values.field || [])]);
             console.log('arrayFields in component', arrayFields)
-            setKey(new Date().getTime());
         }, [formState.values.field]);
         return null;
     };
@@ -139,7 +138,7 @@ function ArrayFieldForm() {
     useEffect(() => {
         console.log('arrayFields', arrayFields)
         console.log('arrayFields[0]', arrayFields[0])
-    }, [arrayFields, key])
+    }, [arrayFields])
     const onSelectField = async () => {
         // console.log('value', selectedId)
         // console.log('fieldIndex', fieldIndex)
