@@ -20,6 +20,8 @@ import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import useTableFieldState from "./hooks/useTableFieldState";
 import {bitable, FieldType, ISelectFieldOption, ISingleSelectField} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
+import fill from "./FillDefaultValue";
+import {useTranslation} from "react-i18next";
 
 function ArrayFieldForm() {
     const {
@@ -28,13 +30,13 @@ function ArrayFieldForm() {
         setTableInfo,
         setFieldInfo,
     } = useTableFieldState();
+    const {t} = useTranslation();
     const [key, setKey] = useState<string | number>(0);
     const [data, setData] = useState<{ name: string, defaultValue: string; }[]>();
     const formApi = useRef<any>();
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
     const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ id: string, name: string }[][]>([]);
-    // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
     const [arrayFields, setArrayFields] = useState<{ name: string, defaultValue: string, autoInput: boolean }[]>([]);
     const [optionsList, setOptionsList] = useState<ISelectFieldOption[][]>();
 
@@ -230,7 +232,13 @@ function ArrayFieldForm() {
         setFieldListCanChooseList(fill)
         setLoading(false)
     }
-
+    const clickFill = async (index: any) => {
+        console.log('clickFill', index)
+        if (optionsList) {
+            const defaultValue = await getCellValue(optionsList[index], arrayFields, index, setLoading, fieldInfo, t)
+            await fill(tableInfo, fieldInfo, defaultValue);
+        }
+    }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
             <Form
@@ -314,7 +322,7 @@ function ArrayFieldForm() {
                                             theme="solid"
                                             type="primary"
                                             className="bt1"
-                                            // onClick={clickFill}
+                                            onClick={() => clickFill(i)}
                                             style={{margin: 12, alignSelf: 'flex-end'}}
                                         >
                                             {"填充"}
@@ -376,3 +384,36 @@ function ArrayFieldForm() {
 }
 
 export default ArrayFieldForm;
+
+// 不同类型的单元格，获取属于它们对应的单元格的值
+const getCellValue = async (options: ISelectFieldOption[] | undefined, arrayFields: any, index: number, setLoading: any, type: any, t: any) => {
+    const option = arrayFields[index].name;
+
+    if (!option || !options || !options.some(option => option)) {
+        Toast.error(t('option.error'));
+        return;
+    }
+    let value = null;
+    setLoading(true);
+    switch (type) {
+        // TODO 支持更多类型
+        // case FieldType.Number:
+        // case FieldType.Rating:
+        // case FieldType.Currency:
+        // case FieldType.Text:
+        //   // console.log('number', restFormValue)
+        //   value = getRandom({ max, min, ...restFormValue })
+        //   break;
+        // case FieldType.Text:
+        //   console.log('text', restFormValue)
+        //   value = [{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}]
+        //   break;
+        case FieldType.SingleSelect:
+            value = {id: option, text: ""}
+            break;
+        default:
+            break;
+    }
+    setLoading(false);
+    return value;
+}
