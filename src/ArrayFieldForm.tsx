@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {ArrayField, TextArea, Form, Button, useFormState, Row, useFormApi} from '@douyinfe/semi-ui';
-import {IconPlusCircle, IconMinusCircle} from '@douyinfe/semi-icons';
+import React, {useEffect, useRef, useState} from 'react';
+import {ArrayField, Button, Form} from '@douyinfe/semi-ui';
+import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import {IField, IFieldMeta as FieldMeta, ISelectFieldOption, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 
 function ArrayFieldForm() {
@@ -27,15 +27,31 @@ function ArrayFieldForm() {
     const [options, setOptions] = useState<ISelectFieldOption[]>();
 
     const [data, setData] = useState<{ name: string, defaultValue: string; }[]>();
-    const formApi = useFormApi();
+    const formApi = useRef<any>();
 
     useEffect(() => {
         setData([
-            {name: 'Semi D2C', defaultValue: 'Engineer'},
-            {name: 'Semi C2D', defaultValue: 'Designer'},
+            {name: 'Engineer', defaultValue: 'Engineer'},
+            {name: 'Designer', defaultValue: 'Designer'},
         ])
-    }, []);
 
+        // console.log(formApi.getValues)
+    }, []);
+    // 复用上一次的记录
+    const useLastRecord = () => {
+        formApi.current.setValues({
+            field: [
+                {name: 'Engineer', defaultValue: 'Engineer'},
+                {name: 'Designer', defaultValue: 'Designer'},
+            ]
+        })
+    }
+    const onSelectField = async (value: any) => {
+        console.log(value)
+        console.log('formState: ', formApi.current.formState)
+        console.log('formApi: ', formApi.current)
+        console.log('values: ', formApi.current.getValues)
+    }
     const onSelectTable = async (t: any) => {
         if (tableInfo) {
             // 单选
@@ -55,29 +71,43 @@ function ArrayFieldForm() {
                 field: undefined,
                 fieldMeta: undefined
             });
-            formApi.setValues({
+            formApi.current.setValues({
                 table: chosenTable.id
             })
         }
         console.log("tableInfo", tableInfo);
     }
 
-
     return (
         <Form
-            wrapperCol={{ span: 20 }}
-            labelCol={{ span: 100 }}
+            wrapperCol={{span: 20}}
+            labelCol={{span: 100}}
             style={{width: 500}}
             labelPosition='top'
             // labelWidth='100px'
             allowEmpty
+            getFormApi={(a: any) => formApi.current = a}
+            onChange={(formState: any) => formApi.current.formState = formState}
         >
-            <Form.Select style={{width: 200}} onChange={onSelectTable} label='Table' field="table">
-                {
-                    Array.isArray(tableInfo?.tableMetaList) && tableInfo?.tableMetaList.map(({id, name}) =>
-                        <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
-                }
-            </Form.Select>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+                <Form.Select style={{width: 200}} onChange={onSelectTable} label='Table' field="table">
+                    {
+                        Array.isArray(tableInfo?.tableMetaList) && tableInfo?.tableMetaList.map(({id, name}) =>
+                            <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
+                    }
+                </Form.Select>
+                <Button
+                    theme="solid"
+                    type="primary"
+                    className="bt1"
+                    onClick={useLastRecord}
+                    style={{margin: 12, alignSelf: 'flex-end'}}
+                >
+                    {"复用上一次记录"}
+                </Button>
+            </div>
+
+
             <ArrayField field='field' initValue={data}>
                 {({add, arrayFields, addWithInitValue}) => (
                     <React.Fragment>
@@ -89,6 +119,7 @@ function ArrayFieldForm() {
                                         field={`${field}[name]`}
                                         label={`字段名`}
                                         style={{width: 120, marginRight: 20}}
+                                        onChange={onSelectField}
                                         optionList={[
                                             {label: 'Engineer', value: 'Engineer'},
                                             {label: 'Designer', value: 'Designer'},
@@ -115,14 +146,14 @@ function ArrayFieldForm() {
                                         {"填充"}
                                     </Button>
 
-                                        <Form.Switch
-                                            field="autoInput"
-                                            label={{text: '自动填充', width: '100%'}}
-                                            // noLabel={true}
-                                            checkedText='开'
-                                            uncheckedText='关'
-                                            // onChange={(v) => openAutoInput(v)}
-                                        />
+                                    <Form.Switch
+                                        field="autoInput"
+                                        label={{text: '自动填充', width: '100%'}}
+                                        // noLabel={true}
+                                        checkedText='开'
+                                        uncheckedText='关'
+                                        // onChange={(v) => openAutoInput(v)}
+                                    />
 
                                     <Button
                                         type='danger'
@@ -164,7 +195,7 @@ function ArrayFieldForm() {
                     style={{margin: 12, alignSelf: 'flex-end'}}
                 >重置</Button>
             </div>
-
+            {/*<ComponentWithFormState />*/}
         </Form>
     );
 }
