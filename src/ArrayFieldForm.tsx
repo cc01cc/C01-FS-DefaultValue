@@ -65,9 +65,9 @@ function ArrayFieldForm() {
      * 4. 初始化可选字段列表
      */
     const fetchNewInfo = async () => {
+        // 刷新时添加加载状态
         setLoading(true)
         setLoadingContent('刷新数据中')
-        // todo 刷新时添加加载状态
         const selection = await bitable.base.getSelection();
         console.log("selection", selection);
         if (!selection.tableId) {
