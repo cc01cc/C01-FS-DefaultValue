@@ -30,6 +30,7 @@ import {Button, Col, Form, Row, Spin, Toast} from "@douyinfe/semi-ui";
 import {useTranslation} from 'react-i18next';
 import fill from "./FillDefaultValue";
 import {Utils} from "./Utils";
+import ArrayFieldDemo from "./ArrayFieldDemo";
 
 /** 支持填入默认值的字段 */
 const f = [FieldType.SingleSelect]
@@ -79,7 +80,8 @@ export default function Ap() {
     }, [tableList])
 
 
-    return <InputDefaultValue key={key}></InputDefaultValue>
+    // return <InputDefaultValue key={key}></InputDefaultValue>
+    return <ArrayFieldDemo></ArrayFieldDemo>
 }
 
 function InputDefaultValue() {
