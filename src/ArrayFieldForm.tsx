@@ -32,6 +32,8 @@ function ArrayFieldForm() {
     const [data, setData] = useState<{ name: string, defaultValue: string; }[]>();
     const formApi = useRef<any>();
 
+    const [fieldListCanChoose, setFieldListCanChoose] = useState<{ name: string, id: string; }[]>([]);
+    // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
 
     /**
      * 初始化
@@ -52,31 +54,53 @@ function ArrayFieldForm() {
         });
     }, []);
 
+    /**
+     * 获取新数据
+     * 1. 获取表信息
+     * 2. 获取字段信息
+     * 3. 清空历史记录
+     * 4. 清空本地缓存
+     * 4. 初始化可选字段列表
+     */
     const fetchNewInfo = async () => {
+        // todo 刷新时添加加载状态
         const selection = await bitable.base.getSelection();
         console.log("selection", selection);
-        if (selection.tableId) {
-            const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
-                bitable.base.getTableById(selection.tableId),
-                bitable.base.getTableMetaList(),
-                bitable.base.getTableList()
-            ])
-            setTableInfo({
-                table: tableRes,
-                tableMeta: tableMetaListRes.find(({id}) => tableRes.id === id)!,
-                tableMetaList: tableMetaListRes.filter(({name}) => name),
-                tableList: tableListRes
-            });
-
-            const fieldMetaList = await tableRes.getFieldMetaList();
-            const fieldList = await tableRes.getFieldList();
-            setFieldInfo({
-                fieldList,
-                fieldMetaList,
-                field: undefined,
-                fieldMeta: undefined
-            })
+        if (!selection.tableId) {
+            Toast.error('table.err')
+            return;
         }
+        // 清空历史记录
+        formApi.current.reset();
+
+        // 清空本地缓存
+        localStorage.clear();
+        // 获取表信息
+        const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
+            bitable.base.getTableById(selection.tableId),
+            bitable.base.getTableMetaList(),
+            bitable.base.getTableList()
+        ])
+        setTableInfo({
+            table: tableRes,
+            tableMeta: tableMetaListRes.find(({id}) => tableRes.id === id)!,
+            tableMetaList: tableMetaListRes.filter(({name}) => name),
+            tableList: tableListRes
+        });
+
+        // 获取字段信息
+        const fieldMetaList = await tableRes.getFieldMetaList();
+        const fieldList = await tableRes.getFieldList();
+        setFieldInfo({
+            fieldList,
+            fieldMetaList,
+            field: undefined,
+            fieldMeta: undefined
+        })
+
+        // 初始化可选字段列表
+        setFieldListCanChoose(fieldMetaList.map(({name, id}) => ({name, id})))
+        console.log('fieldListCanChoose', fieldListCanChoose)
     }
 
     /**
@@ -200,7 +224,7 @@ function ArrayFieldForm() {
                                     </Button>
 
                                     <Form.Switch
-                                        field="autoInput"
+                                        field={`${field}[autoInput]`}
                                         label={{text: '自动填充', width: '100%'}}
                                         // noLabel={true}
                                         checkedText='开'
