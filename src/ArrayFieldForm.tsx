@@ -121,11 +121,35 @@ function ArrayFieldForm() {
             ]
         })
     }
-    const onSelectField = async (value: any) => {
-        console.log(value)
-        console.log('formState: ', formApi.current.formState)
-        console.log('formApi: ', formApi.current)
-        console.log('values: ', formApi.current.getValues)
+    const onSelectField = async (selectedId: any, fieldIndex: number) => {
+        console.log('value', selectedId)
+        console.log('fieldIndex', fieldIndex)
+        // 当选择一个字段时
+        if (selectedId) {
+            // 从其他fieldListCanChoose数组中删除这个字段
+            fieldListCanChoose.forEach((list, index) => {
+                if (index !== fieldIndex) {
+                    const fieldIndex = list.findIndex(({id}) => id === selectedId);
+                    if (fieldIndex !== -1) {
+                        list.splice(fieldIndex, 1);
+                    }
+                }
+            });
+        } else {
+            if (!fieldInfo) {
+                Toast.error('获取字段信息失败')
+                return;
+            }
+            // 当取消选择时，将这个字段添加回去
+            const field = fieldInfo.fieldMetaList.find(({id}) => id === selectedId);
+            fieldListCanChoose.forEach(list => {
+                if (!field) {
+                    Toast.error('添加候选字段失败')
+                    return;
+                }
+                list.push(field);
+            });
+        }
     }
     const onSelectTable = async (t: any) => {
         setLoading(true);
@@ -217,7 +241,7 @@ function ArrayFieldForm() {
                                             field={`${field}[name]`}
                                             label={`字段名`}
                                             style={{width: 120, marginRight: 20}}
-                                            onChange={onSelectField}
+                                            onChange={(selectedId) => onSelectField(selectedId, i)}
                                         >
                                             {
                                                 fieldListCanChoose[i].map(({id, name}) => <Form.Select.Option key={id}
