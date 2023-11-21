@@ -15,7 +15,7 @@
  */
 
 import React, {useEffect, useRef, useState} from 'react';
-import {ArrayField, Button, Form, Spin, Toast} from '@douyinfe/semi-ui';
+import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import useTableFieldState from "./hooks/useTableFieldState";
 import {bitable} from "@lark-base-open/js-sdk";
@@ -36,7 +36,13 @@ function ArrayFieldForm() {
 
     const [fieldListCanChoose, setFieldListCanChoose] = useState<{ name: string, id: string; }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
-
+    let arrayFields: any = [];
+    const ComponentUsingFormState = () => {
+        const formState = useFormState();
+        console.log("formState", formState);
+        arrayFields = formState.values.field;
+        return null;
+    };
     /**
      * 初始化
      */
@@ -318,7 +324,7 @@ function ArrayFieldForm() {
                         style={{margin: 12, alignSelf: 'flex-end'}}
                     >重置</Button>
                 </div>
-
+                <ComponentUsingFormState/>
             </Form>
         </Spin>
     );
