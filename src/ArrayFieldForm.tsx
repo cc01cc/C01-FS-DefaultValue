@@ -169,7 +169,7 @@ function ArrayFieldForm() {
         const specialFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
         // 将已经选择的字段添加到各自的候选框中
         arrayFields.forEach((field, index) => {
-            let specialFieldListCanChoose = [...tempFieldListCanChoose];
+            let specialFieldListCanChoose = tempFieldListCanChoose ? [...tempFieldListCanChoose] : [];
             console.log(index, 'before specialFieldListCanChoose', specialFieldListCanChoose)
             const findField = fieldInfo?.fieldMetaList.find(({id}) => id === field.name);
             console.log(index, 'findField', findField)
