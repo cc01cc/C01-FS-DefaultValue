@@ -128,29 +128,41 @@ function ArrayFieldForm() {
         console.log('values: ', formApi.current.getValues)
     }
     const onSelectTable = async (t: any) => {
-        if (tableInfo) {
-            // 单选
-            const {tableList, tableMetaList} = tableInfo
-            const chosenTable = tableList.find(({id}) => id === t)!;
-            const chosenTableMeta = tableMetaList.find(({id}) => id === t)!;
-            setTableInfo({
-                ...tableInfo,
-                table: chosenTable,
-                tableMeta: chosenTableMeta
-            });
-            const [fieldMetaList, fieldList] = await Promise.all([chosenTable.getFieldMetaList(), chosenTable.getFieldList()])
-
-            setFieldInfo({
-                fieldList,
-                fieldMetaList,
-                field: undefined,
-                fieldMeta: undefined
-            });
-            formApi.current.setValues({
-                table: chosenTable.id
-            })
+        setLoading(true);
+        setLoadingContent('获取表信息中')
+        if (!tableInfo) {
+            Toast.error('获取表信息失败')
+            return;
         }
-        console.log("tableInfo", tableInfo);
+        // 单选
+        const {tableList, tableMetaList} = tableInfo
+        const chosenTable = tableList.find(({id}) => id === t)!;
+        const chosenTableMeta = tableMetaList.find(({id}) => id === t)!;
+        setTableInfo({
+            ...tableInfo,
+            table: chosenTable,
+            tableMeta: chosenTableMeta
+        });
+        const [fieldMetaList, fieldList] = await Promise.all([chosenTable.getFieldMetaList(), chosenTable.getFieldList()])
+
+        setFieldInfo({
+            fieldList,
+            fieldMetaList,
+            field: undefined,
+            fieldMeta: undefined
+        });
+        formApi.current.setValues({
+            table: chosenTable.id
+        })
+
+        if (!fieldInfo) {
+            Toast.error('获取字段信息失败')
+            return
+        }
+        const fill = new Array(fieldInfo.fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
+        console.log('fill', fill)
+        setFieldListCanChoose(fill)
+        setLoading(false)
     }
 
     return (
@@ -209,7 +221,7 @@ function ArrayFieldForm() {
                                         >
                                             {
                                                 fieldListCanChoose[i].map(({id, name}) => <Form.Select.Option key={id}
-                                                                                                           value={id}>{name}</Form.Select.Option>)
+                                                                                                              value={id}>{name}</Form.Select.Option>)
                                             }
                                         </Form.Select>
                                         <Form.Select
