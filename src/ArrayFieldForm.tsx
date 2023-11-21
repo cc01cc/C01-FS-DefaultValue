@@ -180,7 +180,7 @@ function ArrayFieldForm() {
         console.log('selectedId', selectedId)
         const {fieldMetaList} = fieldInfo!
         const chosenFieldMeta = fieldMetaList.find(({id}) => selectedId === id)!
-        const tempOptionsList = new Array(fieldMetaList.length)
+        const tempOptionsList = optionsList || new Array(fieldMetaList.length)
         if (chosenFieldMeta.type === FieldType.SingleSelect) {
             // getOptions(fieldInfo).then(setOptions);
             const singleSelectField = await tableInfo?.table.getField<ISingleSelectField>(chosenFieldMeta.id as string);
