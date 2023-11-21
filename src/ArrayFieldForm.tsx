@@ -419,8 +419,8 @@ export default ArrayFieldForm;
 
 // 不同类型的单元格，获取属于它们对应的单元格的值
 const getCellValue = async (options: ISelectFieldOption[] | undefined, arrayFields: any, index: number, setLoading: any, type: any, t: any) => {
-    const option = arrayFields[index].name;
-
+    const option = arrayFields[index].defaultValue;
+    console.log('arrayFields', arrayFields)
     if (!option || !options || !options.some(option => option)) {
         Toast.error(t('option.error'));
         return;
