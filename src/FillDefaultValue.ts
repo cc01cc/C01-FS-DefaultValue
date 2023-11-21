@@ -15,7 +15,7 @@
  */
 
 import {Toast} from "@douyinfe/semi-ui";
-import {IField, IFieldMeta, ITable, ITableMeta} from "@lark-base-open/js-sdk";
+import {IField, IFieldMeta, IOpenCellValue, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 import {Utils} from "./Utils";
 import {useTranslation} from "react-i18next";
 
@@ -69,9 +69,15 @@ export const fillByIndex = async (tableInfo: {
                                       fieldList: IField[];
                                       fieldMetaList: IFieldMeta[]
                                   } | undefined,
+                                  arrayFields: any,
                                   index: number,
-                                  defaultValue: any) => {
-    if (!fieldInfo?.fieldList[index]) {
+                                  defaultValue: IOpenCellValue) => {
+    if (!fieldInfo) {
+        Toast.error('字段未选择')
+        return
+    }
+    const field = fieldInfo.fieldList.find((field) => field.id === arrayFields[index].name)
+    if (!field) {
         const {t} = useTranslation();
         Toast.error(t('field.choose'));
         return;
@@ -79,8 +85,8 @@ export const fillByIndex = async (tableInfo: {
 
     /** 空的单元格行id */
     const recordIdList = new Set((await tableInfo?.table.getRecordIdList()));
-    const fieldValueList = (await fieldInfo.fieldList[index].getFieldValueList()).map(({record_id}) => record_id);
-    const fieldId = fieldInfo.fieldList[index].id;
+    const fieldValueList = (await field.getFieldValueList()).map(({record_id}) => record_id);
+    const fieldId = field.id;
     fieldValueList.forEach((id) => {
         recordIdList.delete(id!)
     })

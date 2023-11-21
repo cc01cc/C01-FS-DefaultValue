@@ -268,7 +268,7 @@ function ArrayFieldForm() {
             Toast.error('获取默认值失败')
             return
         }
-        await fillByIndex(tableInfo, fieldInfo, index, defaultValue);
+        await fillByIndex(tableInfo, fieldInfo, arrayFields, index, defaultValue);
 
     }
     return (
