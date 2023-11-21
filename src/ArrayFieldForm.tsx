@@ -275,7 +275,13 @@ function ArrayFieldForm() {
                 <ArrayField field='field' initValue={data}>
                     {({add, arrayFields, addWithInitValue}) => (
                         <React.Fragment>
-                            <Button onClick={add} icon={<IconPlusCircle/>} theme='light'>添加字段</Button>
+                            <Button onClick={() => {
+                                if (arrayFields.length < fieldListCanChooseList.length) {
+                                    add();
+                                } else {
+                                    Toast.error('字段数量已达上限')
+                                }
+                            }} icon={<IconPlusCircle/>} theme='light'>添加字段</Button>
                             {
                                 arrayFields.map(({field, key, remove}, i) => (
                                     <div key={key} style={{width: '100%', display: 'flex'}}>
