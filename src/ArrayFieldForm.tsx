@@ -189,10 +189,8 @@ function ArrayFieldForm() {
             if (iSelectFieldOptions) {
                 tempOptionsList[index] = iSelectFieldOptions;
             }
-            setOptionsList([...tempOptionsList])
-        } else {
-            setOptionsList(undefined);
         }
+        setOptionsList([...tempOptionsList])
         setLoading(false)
     }
     const onSelectTable = async (t: any) => {
