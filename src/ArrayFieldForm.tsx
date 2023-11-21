@@ -34,7 +34,7 @@ function ArrayFieldForm() {
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
 
-    const [fieldListCanChoose, setFieldListCanChoose] = useState<{ name: string, id: string; }[]>([]);
+    const [fieldListCanChoose, setFieldListCanChoose] = useState<{ name: string, id: string; }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
 
     /**
@@ -102,8 +102,10 @@ function ArrayFieldForm() {
             fieldMeta: undefined
         })
 
-        // 初始化可选字段列表
-        setFieldListCanChoose(fieldMetaList.map(({name, id}) => ({name, id})))
+        // 初始化可选字段数组列表，数组长度为表字段数量，初始时，每个元素包含所有字段
+        const fill = new Array(fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
+        console.log('fill', fill)
+        setFieldListCanChoose(fill)
         setLoading(false)
         console.log('fieldListCanChoose', fieldListCanChoose)
     }
@@ -206,7 +208,7 @@ function ArrayFieldForm() {
                                             onChange={onSelectField}
                                         >
                                             {
-                                                fieldListCanChoose.map(({id, name}) => <Form.Select.Option key={id}
+                                                fieldListCanChoose[i].map(({id, name}) => <Form.Select.Option key={id}
                                                                                                            value={id}>{name}</Form.Select.Option>)
                                             }
                                         </Form.Select>
