@@ -29,6 +29,7 @@ function ArrayFieldForm() {
         options,
         setOptions
     } = useTableFieldState();
+    const [key, setKey] = useState<string | number>(0);
     const [data, setData] = useState<{ name: string, defaultValue: string; }[]>();
     const formApi = useRef<any>();
     const [loading, setLoading] = useState(false)
@@ -45,6 +46,8 @@ function ArrayFieldForm() {
         useEffect(() => {
             console.log('formState.values.field', formState.values.field)
             setArrayFields(formState.values.field || []);
+            console.log('arrayFields in component', arrayFields)
+            setKey(new Date().getTime());
         }, [formState.values.field]);
         return null;
     };
@@ -136,7 +139,7 @@ function ArrayFieldForm() {
     useEffect(() => {
         console.log('arrayFields', arrayFields)
         console.log('arrayFields[0]', arrayFields[0])
-    }, [arrayFields])
+    }, [arrayFields, key])
     const onSelectField = async () => {
         // console.log('value', selectedId)
         // console.log('fieldIndex', fieldIndex)
