@@ -15,7 +15,7 @@
  */
 
 import {useState} from 'react';
-import {IField, IFieldMeta as FieldMeta, ISelectFieldOption, ITable, ITableMeta} from "@lark-base-open/js-sdk";
+import {IField, IFieldMeta as FieldMeta, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 
 const useTableFieldState = () => {
     const [tableInfo, setTableInfo] = useState<{
@@ -38,10 +38,9 @@ const useTableFieldState = () => {
         /** tableInfo.table的所有field元信息 */
         fieldMetaList: FieldMeta[]
     }>()
-    const [options, setOptions] = useState<ISelectFieldOption[]>();
 
 
-    return {tableInfo, setTableInfo, fieldInfo, setFieldInfo, options, setOptions};
+    return {tableInfo, setTableInfo, fieldInfo, setFieldInfo};
 };
 
 export default useTableFieldState;

@@ -18,7 +18,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import useTableFieldState from "./hooks/useTableFieldState";
-import {bitable} from "@lark-base-open/js-sdk";
+import {bitable, FieldType, ISelectFieldOption, ISingleSelectField} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
 
 function ArrayFieldForm() {
@@ -27,8 +27,6 @@ function ArrayFieldForm() {
         fieldInfo,
         setTableInfo,
         setFieldInfo,
-        options,
-        setOptions
     } = useTableFieldState();
     const [key, setKey] = useState<string | number>(0);
     const [data, setData] = useState<{ name: string, defaultValue: string; }[]>();
@@ -38,6 +36,7 @@ function ArrayFieldForm() {
     const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ id: string, name: string }[][]>([]);
     // const [optionListCanChoose, setOptionListCanChoose] = useState<any>([]);
     const [arrayFields, setArrayFields] = useState<{ name: string, defaultValue: string, autoInput: boolean }[]>([]);
+    const [optionsList, setOptionsList] = useState<ISelectFieldOption[][]>();
 
     // 创建防抖函数
     const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 5000), []);
@@ -46,7 +45,6 @@ function ArrayFieldForm() {
         const formState = useFormState();
         useEffect(() => {
             debouncedSetArrayFields([...(formState.values.field || [])]);
-            console.log('arrayFields in component', arrayFields)
         }, [formState.values.field]);
         return null;
     };
@@ -136,19 +134,14 @@ function ArrayFieldForm() {
     }
 
     useEffect(() => {
-        // debouncedSetArrayFields(arrayFields);
-        console.log('arrayFields', arrayFields)
-        console.log('arrayFields[0]', arrayFields[0])
-// 1. 遍历 arrayFields，获取每个字段的 id
+
+        // 1. 遍历 arrayFields，获取每个字段的 id
         // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
         // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
-
-
         const tempFieldListCanChoose = fieldInfo?.fieldMetaList.filter(({id}) => {
                 for (let i = 0; i < arrayFields.length; i++) {
                     const field = arrayFields[i].name;
-
                     if (!field) {
                         // console.log(i, 'field is undefined')
                         continue;
@@ -165,33 +158,42 @@ function ArrayFieldForm() {
                 return true;
             }
         ).map(({id, name}) => ({id, name}));
-        console.log('tempFieldListCanChoose', tempFieldListCanChoose)
         const specialFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
         // 将已经选择的字段添加到各自的候选框中
         arrayFields.forEach((field, index) => {
             let specialFieldListCanChoose = tempFieldListCanChoose ? [...tempFieldListCanChoose] : [];
-            console.log(index, 'before specialFieldListCanChoose', specialFieldListCanChoose)
             const findField = fieldInfo?.fieldMetaList.find(({id}) => id === field.name);
-            console.log(index, 'findField', findField)
             if (findField && findField.id && findField.name) {
                 specialFieldListCanChoose?.push({id: findField.id, name: findField.name});
             }
-            console.log(index, 'specialFieldListCanChoose', specialFieldListCanChoose)
             if (!specialFieldListCanChoose) {
                 return
             }
             specialFieldListCanChooseList[index] = specialFieldListCanChoose
         })
-        console.log('specialFieldListCanChooseList', specialFieldListCanChooseList)
         setFieldListCanChooseList([...specialFieldListCanChooseList])
-        console.log('fieldListCanChooseList', fieldListCanChooseList)
     }, [arrayFields])
-    const onSelectField = async () => {
-        // console.log('value', selectedId)
-        // console.log('fieldIndex', fieldIndex)
-        console.log('formApi', formApi.current.formState)
-
-
+    const onSelectField = async (selectedId: any, index: number) => {
+        setLoading(true)
+        setLoadingContent('获取字段信息中')
+        setOptionsList(undefined)
+        console.log('selectedId', selectedId)
+        const {fieldMetaList} = fieldInfo!
+        const chosenFieldMeta = fieldMetaList.find(({id}) => selectedId === id)!
+        const tempOptionsList = new Array(fieldMetaList.length)
+        if (chosenFieldMeta.type === FieldType.SingleSelect) {
+            // getOptions(fieldInfo).then(setOptions);
+            const singleSelectField = await tableInfo?.table.getField<ISingleSelectField>(chosenFieldMeta.id as string);
+            const iSelectFieldOptions = await singleSelectField?.getOptions();
+            console.log("iSelectFieldOptions", iSelectFieldOptions);
+            if (iSelectFieldOptions) {
+                tempOptionsList[index] = iSelectFieldOptions;
+            }
+            setOptionsList([...tempOptionsList])
+        } else {
+            setOptionsList(undefined);
+        }
+        setLoading(false)
     }
     const onSelectTable = async (t: any) => {
         setLoading(true);
@@ -289,7 +291,7 @@ function ArrayFieldForm() {
                                             field={`${field}[name]`}
                                             label={`字段名`}
                                             style={{width: 120, marginRight: 20}}
-                                            onSelect={(selectedId) => onSelectField()}
+                                            onSelect={(selectedId) => onSelectField(selectedId, i)}
                                         >
                                             {
                                                 fieldListCanChooseList[i].map(({id, name}) => <Form.Select.Option
@@ -301,12 +303,14 @@ function ArrayFieldForm() {
                                             field={`${field}[defaultValue]`}
                                             label={`默认值`}
                                             style={{width: 120}}
-                                            optionList={[
-                                                {label: 'Engineer', value: 'Engineer'},
-                                                {label: 'Designer', value: 'Designer'},
-                                            ]}
+                                            // onChange={onSelectOption}
+                                            disabled={!optionsList || optionsList.length === 0}
                                         >
-
+                                            {
+                                                optionsList && optionsList[i] && optionsList[i].map(({id, name}) =>
+                                                    <Form.Select.Option key={id}
+                                                                        value={id}>{name || "null"}</Form.Select.Option>)
+                                            }
                                         </Form.Select>
                                         <Button
                                             theme="solid"
