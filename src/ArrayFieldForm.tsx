@@ -143,7 +143,6 @@ function ArrayFieldForm() {
         // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
         // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
-        const tempFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
 
 
         const tempFieldListCanChoose = fieldInfo?.fieldMetaList.filter(({id}) => {
@@ -167,15 +166,13 @@ function ArrayFieldForm() {
             }
         ).map(({id, name}) => ({id, name}));
         console.log('tempFieldListCanChoose', tempFieldListCanChoose)
+        const specialFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
         // 将已经选择的字段添加到各自的候选框中
         arrayFields.forEach((field, index) => {
-            let specialFieldListCanChoose = tempFieldListCanChoose;
+            let specialFieldListCanChoose = [...tempFieldListCanChoose];
             console.log(index, 'before specialFieldListCanChoose', specialFieldListCanChoose)
             const findField = fieldInfo?.fieldMetaList.find(({id}) => id === field.name);
             console.log(index, 'findField', findField)
-            if (!findField) {
-                return
-            }
             if (findField && findField.id && findField.name) {
                 specialFieldListCanChoose?.push({id: findField.id, name: findField.name});
             }
@@ -183,9 +180,11 @@ function ArrayFieldForm() {
             if (!specialFieldListCanChoose) {
                 return
             }
-            fieldListCanChooseList.push(specialFieldListCanChoose)
+            specialFieldListCanChooseList[index] = specialFieldListCanChoose
         })
-
+        console.log('specialFieldListCanChooseList', specialFieldListCanChooseList)
+        setFieldListCanChooseList([...specialFieldListCanChooseList])
+        console.log('fieldListCanChooseList', fieldListCanChooseList)
     }, [arrayFields])
     const onSelectField = async () => {
         // console.log('value', selectedId)
