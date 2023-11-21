@@ -18,9 +18,16 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import useTableFieldState from "./hooks/useTableFieldState";
-import {bitable, FieldType, ISelectFieldOption, ISingleSelectField} from "@lark-base-open/js-sdk";
+import {
+    bitable,
+    FieldType,
+    IOpenCellValue,
+    IOpenSingleSelect,
+    ISelectFieldOption,
+    ISingleSelectField
+} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
-import fill from "./FillDefaultValue";
+import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
 
 function ArrayFieldForm() {
@@ -32,12 +39,22 @@ function ArrayFieldForm() {
     } = useTableFieldState();
     const {t} = useTranslation();
     const [key, setKey] = useState<string | number>(0);
-    const [data, setData] = useState<{ name: string, defaultValue: string; }[]>();
+    const [data, setData] = useState<{
+        name: string,
+        defaultValue: string;
+    }[]>();
     const formApi = useRef<any>();
     const [loading, setLoading] = useState(false)
     const [loadingContent, setLoadingContent] = useState('')
-    const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{ id: string, name: string }[][]>([]);
-    const [arrayFields, setArrayFields] = useState<{ name: string, defaultValue: string, autoInput: boolean }[]>([]);
+    const [fieldListCanChooseList, setFieldListCanChooseList] = useState<{
+        id: string,
+        name: string
+    }[][]>([]);
+    const [arrayFields, setArrayFields] = useState<{
+        name: string,
+        defaultValue: string,
+        autoInput: boolean
+    }[]>([]);
     const [optionsList, setOptionsList] = useState<ISelectFieldOption[][]>();
 
     // 创建防抖函数
@@ -234,10 +251,25 @@ function ArrayFieldForm() {
     }
     const clickFill = async (index: any) => {
         console.log('clickFill', index)
-        if (optionsList) {
-            const defaultValue = await getCellValue(optionsList[index], arrayFields, index, setLoading, fieldInfo, t)
-            await fill(tableInfo, fieldInfo, defaultValue);
+        if (!optionsList) {
+            Toast.error('请先获取选项')
+            return
         }
+        // 获取字段类型
+        console.log('fieldInfo', fieldInfo)
+        const type = fieldInfo?.fieldMetaList.find(({id}) => id === arrayFields[index].name)?.type
+        console.log('type', type)
+        if (!type) {
+            Toast.error('获取字段类型失败')
+            return
+        }
+        const defaultValue = await getCellValue(optionsList[index], arrayFields, index, setLoading, type, t) as IOpenCellValue
+        if (!defaultValue) {
+            Toast.error('获取默认值失败')
+            return
+        }
+        await fillByIndex(tableInfo, fieldInfo, index, defaultValue);
+
     }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
@@ -395,6 +427,7 @@ const getCellValue = async (options: ISelectFieldOption[] | undefined, arrayFiel
     }
     let value = null;
     setLoading(true);
+    console.log('option', option)
     switch (type) {
         // TODO 支持更多类型
         // case FieldType.Number:
@@ -409,11 +442,12 @@ const getCellValue = async (options: ISelectFieldOption[] | undefined, arrayFiel
         //   value = [{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}]
         //   break;
         case FieldType.SingleSelect:
-            value = {id: option, text: ""}
+            value = {id: option, text: ""} as IOpenSingleSelect
             break;
         default:
             break;
     }
     setLoading(false);
+    console.log('value', value)
     return value;
 }
