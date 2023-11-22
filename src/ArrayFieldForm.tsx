@@ -17,16 +17,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
-import {
-    bitable,
-    FieldType,
-    ICommonSelectFieldProperty,
-    IField,
-    IFieldMeta,
-    IOpenSingleSelect,
-    ISelectFieldOption,
-    ITable
-} from "@lark-base-open/js-sdk";
+import {bitable, FieldType, ICommonSelectFieldProperty, ISelectFieldOption, ITable} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
 import {useTranslation} from "react-i18next";
 import {fetchNewData, getDefaultValue, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
@@ -74,9 +65,16 @@ function ArrayFieldForm() {
         }, [formState.values.field]);
         debouncedSetFormStatus(formState);
         if (formState.values.table) {
+            console.log('已保存')
             // 将表单状态保存到本地
+            // console.log('s ', formStatus)
+            // console.log('j ', JSON.stringify(formStatus))
+            // console.log('formApi', formApi.current.getValues())
+
             localStorage.setItem('formStatus', JSON.stringify(formStatus));
-            localStorage.setItem('fieldInfo', JSON.stringify(fieldListInTable));
+            localStorage.setItem('fieldListInTable', JSON.stringify(fieldListInTable));
+            localStorage.setItem('tableActive', JSON.stringify(tableActive));
+            localStorage.setItem('tableList', JSON.stringify(tableList));
         }
         return null;
     };
@@ -89,32 +87,52 @@ function ArrayFieldForm() {
             {name: 'Designer', defaultValue: 'Designer'},
         ])
 
-        async function init() {
-            // 刷新时添加加载状态
-            setLoading(true)
-            setLoadingContent('获取数据中')
-
-            // todo 更改表格选项后记得更新 tableActive 等信息
-            const newData = await fetchNewData();
-            setTableActive(newData.tableActive);
-            setTableList(newData.tableList);
-            setFieldListInTable(newData.fieldListInTable);
-        }
 
         init().catch((e) => {
             Toast.error('table.err')
             console.error(e)
         });
+
+        async function init() {
+            // 刷新时添加加载状态
+            setLoading(true)
+            setLoadingContent('初始化')
+
+            const newData = await fetchNewData();
+            const tempTableActive = newData.tableActive;
+            const tempTableList = newData.tableList;
+            const tempFieldListInTable = newData.fieldListInTable;
+            setTableActive(tempTableActive);
+            setTableList(tempTableList);
+            setFieldListInTable(tempFieldListInTable);
+
+            const fieldListInTableJSON = localStorage.getItem('fieldListInTable');
+            const tableActiveJSON = localStorage.getItem('tableActive');
+            const tableListJSON = localStorage.getItem('tableList');
+
+
+            if (fieldListInTableJSON === JSON.stringify(tempFieldListInTable) &&
+                tableActiveJSON === JSON.stringify(tempTableActive) &&
+                tableListJSON === JSON.stringify(tempTableList) &&
+                localStorage.getItem('formStatus')) {
+                setLoadingContent('加载本地缓存')
+                console.log('加载本地缓存')
+                const formStatus = JSON.parse(localStorage.getItem('formStatus') || '');
+                setFormStatus(formStatus);
+                console.log('formStatus', formStatus);
+                formApi.current.setValues(formStatus.values);
+                console.log('formApi', formApi.current.getValues())
+            }
+        }
     }, []);
     useEffect(() => {
         if (loading) {
             setLoading(false);
         }
-        console.log('new fieldListInTable', fieldListInTable);
+        // console.log('new fieldListInTable', fieldListInTable);
     }, [fieldListInTable]);
-
     useEffect(() => {
-        console.log('new fieldListCanChooseList', fieldListCanChooseList);
+        // console.log('new fieldListCanChooseList', fieldListCanChooseList);
     }, [fieldListCanChooseList]);
 
     const fields = fieldListInTable?.fields as ZField[];
@@ -187,9 +205,9 @@ function ArrayFieldForm() {
         // 将已经选择的字段添加到各自的候选框中
         arrayFields.forEach((field, index) => {
             let specialFieldListCanChoose = tempFieldListCanChoose ? [...tempFieldListCanChoose] : [];
-            console.log('fieldListInTable?.fields', fields, field)
+            // console.log('fieldListInTable?.fields', fields, field)
             const findField = fields?.find(({id}) => id === field.name);
-            console.log('findField', findField)
+            // console.log('findField', findField)
             if (findField && findField.id && findField.name) {
                 specialFieldListCanChoose?.push({id: findField.id, name: findField.name});
             }
@@ -198,7 +216,7 @@ function ArrayFieldForm() {
             }
             specialFieldListCanChooseList[index] = specialFieldListCanChoose
         })
-        console.log('specialFieldListCanChooseList', specialFieldListCanChooseList)
+        // console.log('specialFieldListCanChooseList', specialFieldListCanChooseList)
         setFieldListCanChooseList([...specialFieldListCanChooseList])
     }, [arrayFields])
 
@@ -454,53 +472,3 @@ function ArrayFieldForm() {
 }
 
 export default ArrayFieldForm;
-
-// 不同类型的单元格，获取属于它们对应的单元格的值
-const getCellValue = async (optionsList: ISelectFieldOption[][] | undefined, arrayFields: any, index: number, fieldInfo: {
-    field: IField | undefined;
-    fieldMeta: IFieldMeta | undefined;
-    fieldList: IField[];
-    fieldMetaList: IFieldMeta[]
-} | undefined, setLoading: any, t: any) => {
-    if (!optionsList) {
-        Toast.error('请先获取选项')
-        return
-    }
-    const type = fieldInfo?.fieldMetaList.find(({id}) => id === arrayFields[index].name)?.type
-    if (!type) {
-        Toast.error('获取字段类型失败')
-        return
-    }
-
-    const option = arrayFields[index].defaultValue;
-    console.log('arrayFields', arrayFields)
-    if (!option || !optionsList[index] || !optionsList[index].some(option => option)) {
-        Toast.error(t('option.error'));
-        return;
-    }
-    let value = null;
-    setLoading(true);
-    console.log('option', option)
-    switch (type) {
-        // TODO 支持更多类型
-        // case FieldType.Number:
-        // case FieldType.Rating:
-        // case FieldType.Currency:
-        // case FieldType.Text:
-        //   // console.log('number', restFormValue)
-        //   value = getRandom({ max, min, ...restFormValue })
-        //   break;
-        // case FieldType.Text:
-        //   console.log('text', restFormValue)
-        //   value = [{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}]
-        //   break;
-        case FieldType.SingleSelect:
-            value = {id: option, text: ""} as IOpenSingleSelect
-            break;
-        default:
-            break;
-    }
-    setLoading(false);
-    console.log('value', value)
-    return value;
-}
