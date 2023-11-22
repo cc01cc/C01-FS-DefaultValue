@@ -109,7 +109,6 @@ function InputDefaultValue() {
         fieldMetaList: FieldMeta[]
     }>()
     const [options, setOptions] = useState<ISelectFieldOption[]>();
-
     const formApi = useRef<any>()
 
 
@@ -176,7 +175,6 @@ function InputDefaultValue() {
         }
         console.log("tableInfo", tableInfo);
     }
-
     const onSelectField = async (f: any) => {
         setOptions(undefined);
         if (!tableInfo?.table) {
@@ -216,7 +214,6 @@ function InputDefaultValue() {
 
         await fill(tableInfo, fieldInfo, defaultValue);
     }
-
     const openAutoInput = async (v: boolean) => {
         console.log("v", v);
         if (v) {
@@ -294,7 +291,6 @@ function InputDefaultValue() {
                             {t('fill.btn')}
                         </Button>
                     </Col>
-
                 </Row>
                 <Row>
                     <Col span={300}>

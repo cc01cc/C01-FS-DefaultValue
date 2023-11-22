@@ -35,7 +35,7 @@ export const openAutoInputUtils = async (tableInfo: TableInfoType | undefined, f
     let fieldIdList: string[] = [], defaultValueList: string[] = [], typeList: FieldType[] = [];
     arrayFields.forEach((arrayField) => {
         if (arrayField.autoInput && arrayField.name && arrayField.defaultValue) {
-            console.log('arrayField', arrayField)
+            // console.log('arrayField', arrayField)
             fieldIdList.push(arrayField.name);
             defaultValueList.push(arrayField.defaultValue);
             typeList.push(fieldInfo.fieldMetaList.find(fieldMeta => fieldMeta.id === arrayField.name).type);

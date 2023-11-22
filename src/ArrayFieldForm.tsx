@@ -59,15 +59,28 @@ function ArrayFieldForm() {
         autoInput: boolean
     }[]>([]);
     const [optionsList, setOptionsList] = useState<ISelectFieldOption[][]>();
+    const [formStatus, setFormStatus] = useState<any>();
 
     // 创建防抖函数
     const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 5000), []);
+    const debouncedSetFormStatus = useCallback(debounce(setFormStatus, 5000), []);
 
+    /**
+     * 监听表单变化
+     */
     const ComponentUsingFormState = () => {
         const formState = useFormState();
         useEffect(() => {
             debouncedSetArrayFields([...(formState.values.field || [])]);
         }, [formState.values.field]);
+        debouncedSetFormStatus(formState);
+        if (formState.values.table && tableInfo && tableInfo.table && Object.keys(tableInfo.table).length !== 0) {
+            // 将表单状态保存到本地
+            localStorage.setItem('formStatus', JSON.stringify(formStatus));
+            console.log('tableInfo ComponentUsingFormState', tableInfo)
+            console.log('tableInfo table', tableInfo.table, tableInfo.table === undefined, tableInfo.table === null,)
+            localStorage.setItem('fieldInfo', JSON.stringify(fieldInfo));
+        }
         return null;
     };
     /**
@@ -80,7 +93,38 @@ function ArrayFieldForm() {
         ])
 
         async function init() {
+            // 刷新时添加加载状态
+            setLoading(true)
+            setLoadingContent('获取数据中')
+            const selection = await bitable.base.getSelection();
+            console.log("selection", selection);
+            if (!selection.tableId) {
+                Toast.error('table.err')
+                return;
+            }
+            // 获取表信息
+            const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
+                bitable.base.getTableById(selection.tableId),
+                bitable.base.getTableMetaList(),
+                bitable.base.getTableList()
+            ])
+            setTableInfo({
+                table: tableRes,
+                tableMeta: tableMetaListRes.find(({id}) => tableRes.id === id)!,
+                tableMetaList: tableMetaListRes.filter(({name}) => name),
+                tableList: tableListRes
+            });
 
+            // 获取字段信息
+            const fieldMetaList = await tableRes.getFieldMetaList();
+            const fieldList = await tableRes.getFieldList();
+            setFieldInfo({
+                fieldList,
+                fieldMetaList,
+                field: undefined,
+                fieldMeta: undefined
+            })
+            setLoading(false)
         }
 
         init().catch((e) => {
@@ -146,12 +190,7 @@ function ArrayFieldForm() {
      * 复用上一次的记录
      */
     const useLastRecord = () => {
-        formApi.current.setValues({
-            field: [
-                {name: 'Engineer', defaultValue: 'Engineer'},
-                {name: 'Designer', defaultValue: 'Designer'},
-            ]
-        })
+
     }
 
     /**
@@ -262,9 +301,13 @@ function ArrayFieldForm() {
             return
         }
         const fill = new Array(fieldInfo.fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
-        console.log('fill', fill)
         setFieldListCanChooseList(fill)
+        // localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
+        // console.log('tableInfoJSON',JSON.stringify(tableInfo))
+        // console.log('get local tableInfo', localStorage.getItem('tableInfo'))
         setLoading(false)
+        // console.log('tableInfo', tableInfo)
+        // console.log('tableInfo.table', tableInfo.table.id)
     }
     const clickFill = async (index: any) => {
         const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
@@ -333,7 +376,7 @@ function ArrayFieldForm() {
                 onChange={(formState: any) => formApi.current.formState = formState}
             >
                 <div style={{display: 'flex', alignItems: 'center'}}>
-                    <Form.Select style={{width: 200}} onChange={onSelectTable} label='Table' field="table">
+                    <Form.Select style={{width: 200}} onSelect={onSelectTable} label='Table' field="table">
                         {
                             Array.isArray(tableInfo?.tableMetaList) && tableInfo?.tableMetaList.map(({id, name}) =>
                                 <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
@@ -381,7 +424,8 @@ function ArrayFieldForm() {
                                             onSelect={(selectedId) => onSelectField(selectedId, i)}
                                         >
                                             {
-                                                fieldListCanChooseList[i].map(({id, name}) => <Form.Select.Option
+                                                fieldListCanChooseList && fieldListCanChooseList[i] && fieldListCanChooseList[i].map(({id, name}) =>
+                                                    <Form.Select.Option
                                                     key={id}
                                                     value={id}>{name}</Form.Select.Option>)
                                             }
