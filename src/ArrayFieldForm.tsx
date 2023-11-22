@@ -32,7 +32,7 @@ import {
 import {debounce} from 'lodash';
 import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
-import {openAutoInputUtils} from "./utils/arrayFieldFormUtils";
+import {fetchNewData, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
 import {FieldListInTable} from "./type/type";
 
 function ArrayFieldForm() {
@@ -103,73 +103,12 @@ function ArrayFieldForm() {
             // 刷新时添加加载状态
             setLoading(true)
             setLoadingContent('获取数据中')
-            const selection = await bitable.base.getSelection();
-            console.log("selection", selection);
-            if (!selection.tableId) {
-                Toast.error('table.err')
-                return;
-            }
-            // 获取表信息
-            const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
-                bitable.base.getTableById(selection.tableId),
-                bitable.base.getTableMetaList(),
-                bitable.base.getTableList()
-            ])
-            setTableInfo({
-                table: tableRes,
-                tableMeta: tableMetaListRes.find(({id}) => tableRes.id === id)!,
-                tableMetaList: tableMetaListRes.filter(({name}) => name),
-                tableList: tableListRes
-            });
-
-            // 获取字段信息
-            const fieldMetaList = await tableRes.getFieldMetaList();
-            const fieldList = await tableRes.getFieldList();
-            setFieldInfo({
-                fieldList,
-                fieldMetaList,
-                field: undefined,
-                fieldMeta: undefined
-            })
-
 
             // todo 更改表格选项后记得更新 tableActive 等信息
-            const tableActive = await bitable.base.getActiveTable();
-            setTableActive(tableActive);
-            setTableList(await bitable.base.getTableList());
-
-            const fields = await tableActive.getFieldList();
-
-
-            let tempFieldList: {
-                [fieldId: string]: {
-                    name: string;
-                    iField: IField;
-                    iFieldMeta: IFieldMeta;
-                }
-            } = {}
-            for (const field of fields) {
-                tempFieldList[field.id] = {
-                    name: await field.getName(),
-                    iField: field,
-                    iFieldMeta: await field.getMeta()
-                }
-            }
-
-            const tempFieldListInTable: FieldListInTable = {
-                table: {
-                    iTable: tableActive,
-                    id: tableActive.id,
-                    name: await tableActive.getName()
-                },
-                fields: tempFieldList
-            }
-            setFieldListInTable(tempFieldListInTable);
-            console.log('tempFieldListInTable', tempFieldListInTable)
-            console.log('fieldListInTable', fieldListInTable);
-
-            // setLoading(false)
-            console.log('fieldInfo', fieldList[0].getMeta())
+            const newData = await fetchNewData();
+            setTableActive(newData.tableActive);
+            setTableList(newData.tableList);
+            setFieldListInTable(newData.fieldListInTable);
         }
 
         init().catch((e) => {

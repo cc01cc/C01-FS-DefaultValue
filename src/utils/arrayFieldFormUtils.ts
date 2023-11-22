@@ -15,9 +15,17 @@
  */
 
 // 全局变量，存储正在监听的字段
-import {FieldInfoType, TableInfoType} from "../type/type";
+import {FieldInfoType, FieldListInTable, TableInfoType} from "../type/type";
 import {Utils} from "../Utils";
-import {FieldType, IOpenCellValue, IOpenSingleSelect, IRecord} from "@lark-base-open/js-sdk";
+import {
+    bitable,
+    FieldType,
+    IField,
+    IFieldMeta,
+    IOpenCellValue,
+    IOpenSingleSelect,
+    IRecord
+} from "@lark-base-open/js-sdk";
 
 /**
  * 自动填充
@@ -110,4 +118,40 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
     return undefined;
 }
 
+export const fetchNewData = async () => {
+    // todo 更改表格选项后记得更新 tableActive 等信息
+    const tableActive = await bitable.base.getActiveTable();
 
+    const fields = await tableActive.getFieldList();
+
+    let tempFieldList: {
+        [fieldId: string]: {
+            name: string;
+            iField: IField;
+            iFieldMeta: IFieldMeta;
+        }
+    } = {}
+    for (const field of fields) {
+        tempFieldList[field.id] = {
+            name: await field.getName(),
+            iField: field,
+            iFieldMeta: await field.getMeta()
+        }
+    }
+
+    const tempFieldListInTable: FieldListInTable = {
+        table: {
+            iTable: tableActive,
+            id: tableActive.id,
+            name: await tableActive.getName()
+        },
+        fields: tempFieldList
+    }
+
+    return {
+        tableActive: tableActive,
+        tableList: await bitable.base.getTableList(),
+        fieldListInTable: tempFieldListInTable
+    }
+
+}
