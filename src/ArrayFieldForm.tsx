@@ -17,31 +17,22 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/semi-ui';
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
-import useTableFieldState from "./hooks/useTableFieldState";
 import {
     bitable,
     FieldType,
     ICommonSelectFieldProperty,
     IField,
     IFieldMeta,
-    IOpenCellValue,
     IOpenSingleSelect,
     ISelectFieldOption,
     ITable
 } from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
-import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
-import {fetchNewData, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
+import {fetchNewData} from "./utils/arrayFieldFormUtils";
 import {FieldListInTable, ZTable} from "./type/type";
 
 function ArrayFieldForm() {
-    const {
-        tableInfo,
-        fieldInfo,
-        setTableInfo,
-        setFieldInfo,
-    } = useTableFieldState();
     const {t} = useTranslation();
     const [key, setKey] = useState<string | number>(0);
     const [data, setData] = useState<{
@@ -69,8 +60,8 @@ function ArrayFieldForm() {
 
 
     // 创建防抖函数
-    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 5000), []);
-    const debouncedSetFormStatus = useCallback(debounce(setFormStatus, 5000), []);
+    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 1000), []);
+    const debouncedSetFormStatus = useCallback(debounce(setFormStatus, 1000), []);
 
     /**
      * 监听表单变化
@@ -81,12 +72,10 @@ function ArrayFieldForm() {
             debouncedSetArrayFields([...(formState.values.field || [])]);
         }, [formState.values.field]);
         debouncedSetFormStatus(formState);
-        if (formState.values.table && tableInfo && tableInfo.table && Object.keys(tableInfo.table).length !== 0) {
+        if (formState.values.table) {
             // 将表单状态保存到本地
             localStorage.setItem('formStatus', JSON.stringify(formStatus));
-            console.log('tableInfo ComponentUsingFormState', tableInfo)
-            console.log('tableInfo table', tableInfo.table, tableInfo.table === undefined, tableInfo.table === null,)
-            localStorage.setItem('fieldInfo', JSON.stringify(fieldInfo));
+            localStorage.setItem('fieldInfo', JSON.stringify(fieldListInTable));
         }
         return null;
     };
@@ -123,6 +112,11 @@ function ArrayFieldForm() {
         console.log('new fieldListInTable', fieldListInTable);
     }, [fieldListInTable]);
 
+    useEffect(() => {
+        console.log('new fieldListCanChooseList', fieldListCanChooseList);
+    }, [fieldListCanChooseList]);
+
+    const fields = fieldListInTable?.fields;
     /**
      * 获取新数据
      * 1. 获取表信息
@@ -153,7 +147,6 @@ function ArrayFieldForm() {
         setFieldListInTable(newData.fieldListInTable);
 
         // 初始化可选字段数组列表，数组长度为表字段数量，初始时，每个元素包含所有字段
-        const fields = fieldListInTable?.fields;
         const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         setFieldListCanChooseList(fill)
         setLoading(false)
@@ -174,7 +167,7 @@ function ArrayFieldForm() {
         // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
         // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
-        const tempFieldListCanChoose = fieldListInTable?.fields.filter(({id}) => {
+        const tempFieldListCanChoose = fields?.filter(({id}) => {
                 for (let i = 0; i < arrayFields.length; i++) {
                     const field = arrayFields[i].name;
                     if (!field) {
@@ -182,10 +175,6 @@ function ArrayFieldForm() {
                         continue;
                     }
                     // 将当前字段的 id 加入 tempFieldListCanChoose
-                    if (!fieldInfo) {
-                        Toast.error('获取字段信息失败')
-                        return;
-                    }
                     if (id === field) {
                         return false;
                     }
@@ -193,11 +182,13 @@ function ArrayFieldForm() {
                 return true;
             }
         ).map(({id, name}) => ({id, name}));
-        const specialFieldListCanChooseList = new Array(fieldInfo?.fieldMetaList.length).fill(fieldInfo?.fieldMetaList.map(({name, id}) => ({name, id})));
+        const specialFieldListCanChooseList = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         // 将已经选择的字段添加到各自的候选框中
         arrayFields.forEach((field, index) => {
             let specialFieldListCanChoose = tempFieldListCanChoose ? [...tempFieldListCanChoose] : [];
-            const findField = fieldListInTable?.fields.find(({id}) => id === field.name);
+            console.log('fieldListInTable?.fields', fields, field)
+            const findField = fields?.find(({id}) => id === field.name);
+            console.log('findField', findField)
             if (findField && findField.id && findField.name) {
                 specialFieldListCanChoose?.push({id: findField.id, name: findField.name});
             }
@@ -206,15 +197,16 @@ function ArrayFieldForm() {
             }
             specialFieldListCanChooseList[index] = specialFieldListCanChoose
         })
+        console.log('specialFieldListCanChooseList', specialFieldListCanChooseList)
         setFieldListCanChooseList([...specialFieldListCanChooseList])
     }, [arrayFields])
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!tableInfo || !fieldInfo) {
-                return;
-            }
-            await openAutoInputUtils(tableInfo, fieldInfo, arrayFields);
+            // if (!tableInfo || !fieldInfo) {
+            //     return;
+            // }
+            // await openAutoInputUtils(tableInfo, fieldInfo, arrayFields);
         };
 
         fetchData();
@@ -225,7 +217,7 @@ function ArrayFieldForm() {
         setLoading(true)
         setLoadingContent('获取字段信息中')
         // console.log('selectedId', selectedId)
-        const chosenField = fieldListInTable?.fields.find(({id}) => selectedId === id)!
+        const chosenField = fields?.find(({id}) => selectedId === id)!
         if (chosenField.iFieldMeta.type === FieldType.SingleSelect) {
             // 如果已经存在 optionsList 则覆盖，只需修改字段对应的 option 即可，不用整个 optionList；若不存在，则新建
             // todo 考虑字段增减情况下的同步问题
@@ -255,19 +247,18 @@ function ArrayFieldForm() {
         setTableList(newData.tableList);
         setFieldListInTable(newData.fieldListInTable);
 
-        const fields = fieldListInTable?.fields;
         const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         setFieldListCanChooseList(fill)
         setLoading(false)
-
     }
+
     const clickFill = async (index: any) => {
-        const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
-        if (!defaultValue) {
-            Toast.error('获取默认值失败')
-            return
-        }
-        await fillByIndex(tableInfo, fieldInfo, arrayFields, index, defaultValue);
+        // const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
+        // if (!defaultValue) {
+        //     Toast.error('获取默认值失败')
+        //     return
+        // }
+        // await fillByIndex(tableInfo, fieldInfo, arrayFields, index, defaultValue);
 
     }
     /**
