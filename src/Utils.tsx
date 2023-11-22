@@ -45,17 +45,17 @@ export class Utils {
         let successCount = 0;
         // console.log("toSetTask", toSetTask.length);
         const step = 500;
-        console.log("toSetTask", toSetTask)
+        // console.log("toSetTask", toSetTask)
         for (let index = 0; index < toSetTask.length; index += step) {
             const element = toSetTask.slice(index, index + step);
             const sleep = element.length
-            console.log('element', element)
+            // console.log('element', element)
             await table.setRecords(element).then(() => {
                 successCount += element.length;
             }).catch((e: any) => {
                 console.error(e)
             });
-            Toast.info("已填充" + successCount + "条记录")
+            // Toast.info("已填充" + successCount + "条记录")
             await new Promise((resolve) => {
                 setTimeout(() => {
                     resolve('')

@@ -286,6 +286,9 @@ function ArrayFieldForm() {
             for (let i = 0; i < arrayFields.length; i++) {
                 formApi.current.setValue(`field[${i}].autoInput`, false);
             }
+            // 关闭监听
+            // @ts-ignore
+            window.off && window.off.constructor === Function && window.off()
         }
     }
     return (
