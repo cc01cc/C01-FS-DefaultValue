@@ -15,7 +15,7 @@
  */
 
 // 全局变量，存储正在监听的字段
-import {FieldInfoType, FieldListInTable, TableInfoType} from "../type/type";
+import {FieldInfoType, FieldListInTable, TableInfoType, ZTable} from "../type/type";
 import {Utils} from "../Utils";
 import {
     bitable,
@@ -122,6 +122,17 @@ export const fetchNewData = async () => {
     // todo 更改表格选项后记得更新 tableActive 等信息
     const tableActive = await bitable.base.getActiveTable();
 
+    const tempTableList = await bitable.base.getTableList();
+
+    let tableList: ZTable[] = []
+    for (const table of tempTableList) {
+        tableList.push({
+            iTable: table,
+            id: table.id,
+            name: await table.getName()
+        })
+    }
+
     const fields = await tableActive.getFieldList();
 
     let tempFieldList: {
@@ -150,7 +161,7 @@ export const fetchNewData = async () => {
 
     return {
         tableActive: tableActive,
-        tableList: await bitable.base.getTableList(),
+        tableList: tableList,
         fieldListInTable: tempFieldListInTable
     }
 

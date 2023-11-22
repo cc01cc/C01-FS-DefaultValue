@@ -47,3 +47,8 @@ export type FieldListInTable = {
         }
     };
 }
+export type ZTable = {
+    iTable: ITable;
+    id: string;
+    name: string;
+}

@@ -33,7 +33,7 @@ import {debounce} from 'lodash';
 import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
 import {fetchNewData, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
-import {FieldListInTable} from "./type/type";
+import {FieldListInTable, ZTable} from "./type/type";
 
 function ArrayFieldForm() {
     const {
@@ -64,7 +64,7 @@ function ArrayFieldForm() {
     const [formStatus, setFormStatus] = useState<any>();
 
     const [tableActive, setTableActive] = useState<ITable>();
-    const [tableList, setTableList] = useState<ITable[]>([])
+    const [tableList, setTableList] = useState<ZTable[]>([])
     const [fieldListInTable, setFieldListInTable] = useState<FieldListInTable>()
 
 
@@ -368,8 +368,9 @@ function ArrayFieldForm() {
                 <div style={{display: 'flex', alignItems: 'center'}}>
                     <Form.Select style={{width: 200}} onSelect={onSelectTable} label='Table' field="table">
                         {
-                            Array.isArray(tableInfo?.tableMetaList) && tableInfo?.tableMetaList.map(({id, name}) =>
-                                <Form.Select.Option key={id} value={id}>{name}</Form.Select.Option>)
+                            Array.isArray(tableList) && tableList.map(({id, name}) =>
+                                <Form.Select.Option key={id} value={id}
+                                                    defaultValue={tableActive && tableActive.id}>{name}</Form.Select.Option>)
                         }
                     </Form.Select>
                     <Button
