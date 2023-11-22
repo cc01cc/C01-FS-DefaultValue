@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-import {ITable, ITableMeta} from "@lark-base-open/js-sdk";
+import {IField, IFieldMeta, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 
 export type FieldInfoType = {
     /**当前所选field的实例 */
@@ -32,4 +32,18 @@ export type TableInfoType = {
     tableMeta: ITableMeta;
     tableMetaList: ITableMeta[];
     tableList: ITable[]
+}
+export type FieldListInTable = {
+    table: {
+        iTable: ITable;
+        id: string;
+        name: string;
+    };
+    fields: {
+        [fieldId: string]: {
+            name: string;
+            iField: IField;
+            iFieldMeta: IFieldMeta;
+        }
+    };
 }

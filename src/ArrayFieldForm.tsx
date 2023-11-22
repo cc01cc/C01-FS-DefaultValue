@@ -26,12 +26,14 @@ import {
     IOpenCellValue,
     IOpenSingleSelect,
     ISelectFieldOption,
-    ISingleSelectField
+    ISingleSelectField,
+    ITable
 } from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
 import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
 import {openAutoInputUtils} from "./utils/arrayFieldFormUtils";
+import {FieldListInTable} from "./type/type";
 
 function ArrayFieldForm() {
     const {
@@ -60,6 +62,11 @@ function ArrayFieldForm() {
     }[]>([]);
     const [optionsList, setOptionsList] = useState<ISelectFieldOption[][]>();
     const [formStatus, setFormStatus] = useState<any>();
+
+    const [tableActive, setTableActive] = useState<ITable>();
+    const [tableList, setTableList] = useState<ITable[]>([])
+    const [fieldListInTable, setFieldListInTable] = useState<FieldListInTable>()
+
 
     // 创建防抖函数
     const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 5000), []);
@@ -124,7 +131,45 @@ function ArrayFieldForm() {
                 field: undefined,
                 fieldMeta: undefined
             })
-            setLoading(false)
+
+
+            // todo 更改表格选项后记得更新 tableActive 等信息
+            const tableActive = await bitable.base.getActiveTable();
+            setTableActive(tableActive);
+            setTableList(await bitable.base.getTableList());
+
+            const fields = await tableActive.getFieldList();
+
+
+            let tempFieldList: {
+                [fieldId: string]: {
+                    name: string;
+                    iField: IField;
+                    iFieldMeta: IFieldMeta;
+                }
+            } = {}
+            for (const field of fields) {
+                tempFieldList[field.id] = {
+                    name: await field.getName(),
+                    iField: field,
+                    iFieldMeta: await field.getMeta()
+                }
+            }
+
+            const tempFieldListInTable: FieldListInTable = {
+                table: {
+                    iTable: tableActive,
+                    id: tableActive.id,
+                    name: await tableActive.getName()
+                },
+                fields: tempFieldList
+            }
+            setFieldListInTable(tempFieldListInTable);
+            console.log('tempFieldListInTable', tempFieldListInTable)
+            console.log('fieldListInTable', fieldListInTable);
+
+            // setLoading(false)
+            console.log('fieldInfo', fieldList[0].getMeta())
         }
 
         init().catch((e) => {
@@ -132,6 +177,12 @@ function ArrayFieldForm() {
             console.error(e)
         });
     }, []);
+    useEffect(() => {
+        if (loading) {
+            setLoading(false);
+        }
+        console.log('new fieldListInTable', fieldListInTable);
+    }, [fieldListInTable]);
 
     /**
      * 获取新数据
@@ -426,8 +477,8 @@ function ArrayFieldForm() {
                                             {
                                                 fieldListCanChooseList && fieldListCanChooseList[i] && fieldListCanChooseList[i].map(({id, name}) =>
                                                     <Form.Select.Option
-                                                    key={id}
-                                                    value={id}>{name}</Form.Select.Option>)
+                                                        key={id}
+                                                        value={id}>{name}</Form.Select.Option>)
                                             }
                                         </Form.Select>
                                         <Form.Select
