@@ -389,12 +389,12 @@ function ArrayFieldForm() {
                         onClick={clickFillAll}
                         style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
                     >
-                        {"全部填充"}
+                        {"批量填充"}
                     </Button>
                     <Form.Switch
                         field="autoInput"
                         labelPosition={"left"}
-                        label={{text: '全部自动填充', width: '120%'}}
+                        label={{text: '批量自动', width: '120%'}}
                         checkedText='开'
                         uncheckedText='关'
                         style={{marginRight: 12, marginBottom: 12, alignSelf: 'flex-end'}}
