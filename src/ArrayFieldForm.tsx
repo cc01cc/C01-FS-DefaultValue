@@ -21,12 +21,12 @@ import useTableFieldState from "./hooks/useTableFieldState";
 import {
     bitable,
     FieldType,
+    ICommonSelectFieldProperty,
     IField,
     IFieldMeta,
     IOpenCellValue,
     IOpenSingleSelect,
     ISelectFieldOption,
-    ISingleSelectField,
     ITable
 } from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
@@ -146,7 +146,7 @@ function ArrayFieldForm() {
 
         // 清空本地缓存
         localStorage.clear();
-        // 获取表信息
+
         const newData = await fetchNewData();
         setTableActive(newData.tableActive);
         setTableList(newData.tableList);
@@ -154,7 +154,6 @@ function ArrayFieldForm() {
 
         // 初始化可选字段数组列表，数组长度为表字段数量，初始时，每个元素包含所有字段
         const fields = fieldListInTable?.fields;
-        console.log('fields', fields)
         const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         setFieldListCanChooseList(fill)
         setLoading(false)
@@ -175,7 +174,7 @@ function ArrayFieldForm() {
         // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
         // 4. 将 tempFieldListCanChooseList 赋值给 fieldListCanChooseList
-        const tempFieldListCanChoose = fieldInfo?.fieldMetaList.filter(({id}) => {
+        const tempFieldListCanChoose = fieldListInTable?.fields.filter(({id}) => {
                 for (let i = 0; i < arrayFields.length; i++) {
                     const field = arrayFields[i].name;
                     if (!field) {
@@ -198,7 +197,7 @@ function ArrayFieldForm() {
         // 将已经选择的字段添加到各自的候选框中
         arrayFields.forEach((field, index) => {
             let specialFieldListCanChoose = tempFieldListCanChoose ? [...tempFieldListCanChoose] : [];
-            const findField = fieldInfo?.fieldMetaList.find(({id}) => id === field.name);
+            const findField = fieldListInTable?.fields.find(({id}) => id === field.name);
             if (findField && findField.id && findField.name) {
                 specialFieldListCanChoose?.push({id: findField.id, name: findField.name});
             }
@@ -225,63 +224,42 @@ function ArrayFieldForm() {
     const onSelectField = async (selectedId: any, index: number) => {
         setLoading(true)
         setLoadingContent('获取字段信息中')
-        setOptionsList(undefined)
         // console.log('selectedId', selectedId)
-        const {fieldMetaList} = fieldInfo!
-        const chosenFieldMeta = fieldMetaList.find(({id}) => selectedId === id)!
-        const tempOptionsList = optionsList || new Array(fieldMetaList.length)
-        if (chosenFieldMeta.type === FieldType.SingleSelect) {
-            // getOptions(fieldInfo).then(setOptions);
-            const singleSelectField = await tableInfo?.table.getField<ISingleSelectField>(chosenFieldMeta.id as string);
-            const iSelectFieldOptions = await singleSelectField?.getOptions();
-            // console.log("iSelectFieldOptions", iSelectFieldOptions);
+        const chosenField = fieldListInTable?.fields.find(({id}) => selectedId === id)!
+        if (chosenField.iFieldMeta.type === FieldType.SingleSelect) {
+            // 如果已经存在 optionsList 则覆盖，只需修改字段对应的 option 即可，不用整个 optionList；若不存在，则新建
+            // todo 考虑字段增减情况下的同步问题
+            const tempOptionsList = optionsList || new Array(arrayFields.length)
+            setOptionsList(undefined)
+            const property = chosenField.iFieldMeta.property as ICommonSelectFieldProperty;
+            const iSelectFieldOptions = property.options;
+            console.log("iSelectFieldOptions", iSelectFieldOptions);
             if (iSelectFieldOptions) {
                 tempOptionsList[index] = iSelectFieldOptions;
             }
+            setOptionsList([...tempOptionsList])
         }
-        setOptionsList([...tempOptionsList])
         setLoading(false)
     }
     const onSelectTable = async (t: any) => {
-        setLoading(true);
-        setLoadingContent('获取表信息中')
-        if (!tableInfo) {
-            Toast.error('获取表信息失败')
+        if (formStatus.values.table === tableActive?.id) {
+            console.log('已加载');
             return;
         }
-        // 单选
-        const {tableList, tableMetaList} = tableInfo
-        const chosenTable = tableList.find(({id}) => id === t)!;
-        const chosenTableMeta = tableMetaList.find(({id}) => id === t)!;
-        setTableInfo({
-            ...tableInfo,
-            table: chosenTable,
-            tableMeta: chosenTableMeta
-        });
-        const [fieldMetaList, fieldList] = await Promise.all([chosenTable.getFieldMetaList(), chosenTable.getFieldList()])
 
-        setFieldInfo({
-            fieldList,
-            fieldMetaList,
-            field: undefined,
-            fieldMeta: undefined
-        });
-        formApi.current.setValues({
-            table: chosenTable.id
-        })
+        setLoading(true);
+        setLoadingContent('获取表信息中')
 
-        if (!fieldInfo) {
-            Toast.error('获取字段信息失败')
-            return
-        }
-        const fill = new Array(fieldInfo.fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
+        const newData = await fetchNewData();
+        setTableActive(newData.tableActive);
+        setTableList(newData.tableList);
+        setFieldListInTable(newData.fieldListInTable);
+
+        const fields = fieldListInTable?.fields;
+        const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         setFieldListCanChooseList(fill)
-        // localStorage.setItem('tableInfo', JSON.stringify(tableInfo));
-        // console.log('tableInfoJSON',JSON.stringify(tableInfo))
-        // console.log('get local tableInfo', localStorage.getItem('tableInfo'))
         setLoading(false)
-        // console.log('tableInfo', tableInfo)
-        // console.log('tableInfo.table', tableInfo.table.id)
+
     }
     const clickFill = async (index: any) => {
         const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
