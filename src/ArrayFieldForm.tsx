@@ -21,6 +21,8 @@ import useTableFieldState from "./hooks/useTableFieldState";
 import {
     bitable,
     FieldType,
+    IField,
+    IFieldMeta,
     IOpenCellValue,
     IOpenSingleSelect,
     ISelectFieldOption,
@@ -29,6 +31,7 @@ import {
 import {debounce} from 'lodash';
 import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
+import {Utils} from "./Utils";
 
 function ArrayFieldForm() {
     const {
@@ -250,26 +253,44 @@ function ArrayFieldForm() {
         setLoading(false)
     }
     const clickFill = async (index: any) => {
-        console.log('clickFill', index)
-        if (!optionsList) {
-            Toast.error('请先获取选项')
-            return
-        }
-        // 获取字段类型
-        console.log('fieldInfo', fieldInfo)
-        const type = fieldInfo?.fieldMetaList.find(({id}) => id === arrayFields[index].name)?.type
-        console.log('type', type)
-        if (!type) {
-            Toast.error('获取字段类型失败')
-            return
-        }
-        const defaultValue = await getCellValue(optionsList[index], arrayFields, index, setLoading, type, t) as IOpenCellValue
+        const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
         if (!defaultValue) {
             Toast.error('获取默认值失败')
             return
         }
         await fillByIndex(tableInfo, fieldInfo, arrayFields, index, defaultValue);
 
+    }
+    const openAutoInput = async (opened: boolean, index: number) => {
+        console.log("opened", opened);
+        if (opened) {
+
+            const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
+            // @ts-ignore
+            window.off && window.off.constructor === Function && window.off()
+            if (!fieldInfo || !fieldInfo.field) {
+                console.error("error")
+                return;
+            }
+            const fieldId = fieldInfo.field.id;
+            // @ts-ignore
+            window.off = tableInfo.table.onRecordAdd(async (ev) => {
+                const recordList = ev.data;
+                console.log("recordList", recordList);
+                const toSetTask = recordList.map((recordId) => ({
+                    recordId,
+                    fields: {
+                        [fieldId]: defaultValue,
+                    }
+                }));
+                console.log("toSetRecord", toSetTask);
+                await Utils.setRecords(toSetTask, tableInfo);
+            })
+        } else {
+            // 关闭监听
+            // @ts-ignore
+            window.off && window.off.constructor === Function && window.off()
+        }
     }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
@@ -366,9 +387,8 @@ function ArrayFieldForm() {
                                             // noLabel={true}
                                             checkedText='开'
                                             uncheckedText='关'
-                                            // onChange={(v) => openAutoInput(v)}
+                                            onChange={(opened) => openAutoInput(opened, i)}
                                         />
-
                                         <Button
                                             type='danger'
                                             theme='borderless'
@@ -418,10 +438,25 @@ function ArrayFieldForm() {
 export default ArrayFieldForm;
 
 // 不同类型的单元格，获取属于它们对应的单元格的值
-const getCellValue = async (options: ISelectFieldOption[] | undefined, arrayFields: any, index: number, setLoading: any, type: any, t: any) => {
+const getCellValue = async (optionsList: ISelectFieldOption[][] | undefined, arrayFields: any, index: number, fieldInfo: {
+    field: IField | undefined;
+    fieldMeta: IFieldMeta | undefined;
+    fieldList: IField[];
+    fieldMetaList: IFieldMeta[]
+} | undefined, setLoading: any, t: any) => {
+    if (!optionsList) {
+        Toast.error('请先获取选项')
+        return
+    }
+    const type = fieldInfo?.fieldMetaList.find(({id}) => id === arrayFields[index].name)?.type
+    if (!type) {
+        Toast.error('获取字段类型失败')
+        return
+    }
+
     const option = arrayFields[index].defaultValue;
     console.log('arrayFields', arrayFields)
-    if (!option || !options || !options.some(option => option)) {
+    if (!option || !optionsList[index] || !optionsList[index].some(option => option)) {
         Toast.error(t('option.error'));
         return;
     }
