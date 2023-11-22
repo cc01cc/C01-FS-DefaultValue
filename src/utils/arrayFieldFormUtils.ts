@@ -17,7 +17,16 @@
 // 全局变量，存储正在监听的字段
 import {FieldInfoType, FieldListInTable, TableInfoType, ZTable} from "../type/type";
 import {Utils} from "../Utils";
-import {bitable, FieldType, IOpenCellValue, IOpenSingleSelect, IRecord} from "@lark-base-open/js-sdk";
+import {
+    bitable,
+    FieldType,
+    IField,
+    IFieldMeta,
+    IOpenCellValue,
+    IOpenSingleSelect,
+    IRecord,
+    ITable
+} from "@lark-base-open/js-sdk";
 
 /**
  * 自动填充
@@ -110,7 +119,11 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
     return undefined;
 }
 
-export const fetchNewData = async () => {
+export const fetchNewData = async (): Promise<{
+    tableActive: ITable,
+    tableList: ZTable[],
+    fieldListInTable: FieldListInTable,
+}> => {
     // todo 更改表格选项后记得更新 tableActive 等信息
 
     const tableActive = await bitable.base.getActiveTable();
@@ -130,13 +143,12 @@ export const fetchNewData = async () => {
     const tableList: ZTable[] = await Promise.all(tableListPromises);
 
     const fieldListPromises = fields.map(async (field) => ({
-        [field.id]: {
-            name: await field.getName(),
-            iField: field,
-            iFieldMeta: await field.getMeta()
-        }
+        id: field.id,
+        name: await field.getName(),
+        iField: field,
+        iFieldMeta: await field.getMeta()
     }));
-    const tempFieldList = Object.assign({}, ...(await Promise.all(fieldListPromises)));
+    const tempFieldList: { id: string; name: string; iField: IField<any, any, any>; iFieldMeta: IFieldMeta; }[] = await Promise.all(fieldListPromises);
 
     const tempFieldListInTable: FieldListInTable = {
         table: {
@@ -150,6 +162,6 @@ export const fetchNewData = async () => {
     return {
         tableActive: tableActive,
         tableList: tableList,
-        fieldListInTable: tempFieldListInTable
+        fieldListInTable: tempFieldListInTable,
     }
 }

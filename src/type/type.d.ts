@@ -40,13 +40,13 @@ export type FieldListInTable = {
         name: string;
     };
     fields: {
-        [fieldId: string]: {
-            name: string;
-            iField: IField;
-            iFieldMeta: IFieldMeta;
-        }
-    };
+        id: string;
+        name: string;
+        iField: IField;
+        iFieldMeta: IFieldMeta;
+    }[]
 }
+
 export type ZTable = {
     iTable: ITable;
     id: string;

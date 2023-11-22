@@ -147,33 +147,17 @@ function ArrayFieldForm() {
         // 清空本地缓存
         localStorage.clear();
         // 获取表信息
-        const [tableRes, tableMetaListRes, tableListRes] = await Promise.all([
-            bitable.base.getTableById(selection.tableId),
-            bitable.base.getTableMetaList(),
-            bitable.base.getTableList()
-        ])
-        setTableInfo({
-            table: tableRes,
-            tableMeta: tableMetaListRes.find(({id}) => tableRes.id === id)!,
-            tableMetaList: tableMetaListRes.filter(({name}) => name),
-            tableList: tableListRes
-        });
-
-        // 获取字段信息
-        const fieldMetaList = await tableRes.getFieldMetaList();
-        const fieldList = await tableRes.getFieldList();
-        setFieldInfo({
-            fieldList,
-            fieldMetaList,
-            field: undefined,
-            fieldMeta: undefined
-        })
+        const newData = await fetchNewData();
+        setTableActive(newData.tableActive);
+        setTableList(newData.tableList);
+        setFieldListInTable(newData.fieldListInTable);
 
         // 初始化可选字段数组列表，数组长度为表字段数量，初始时，每个元素包含所有字段
-        const fill = new Array(fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
+        const fields = fieldListInTable?.fields;
+        console.log('fields', fields)
+        const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         setFieldListCanChooseList(fill)
         setLoading(false)
-        console.log('fieldListCanChooseList', fieldListCanChooseList)
     }
 
     /**
