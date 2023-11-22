@@ -276,6 +276,17 @@ function ArrayFieldForm() {
         }
         setLoading(false)
     }
+    const clickAutoInputAll = async (opened: boolean) => {
+        if (opened) {
+            for (let i = 0; i < arrayFields.length; i++) {
+                formApi.current.setValue(`field[${i}].autoInput`, true);
+            }
+        } else {
+            for (let i = 0; i < arrayFields.length; i++) {
+                formApi.current.setValue(`field[${i}].autoInput`, false);
+            }
+        }
+    }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
             <Form
@@ -387,6 +398,7 @@ function ArrayFieldForm() {
                         checkedText='开'
                         uncheckedText='关'
                         style={{marginRight: 12, marginBottom: 12, alignSelf: 'flex-end'}}
+                        onChange={clickAutoInputAll}
                     />
 
                     <Button
