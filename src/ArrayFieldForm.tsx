@@ -49,8 +49,8 @@ function ArrayFieldForm() {
     const formRef = useRef()!
 
     // 创建防抖函数
-    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 1000), []);
-    const debouncedSetFormStatus = useCallback(debounce(setFormStatus, 1000), []);
+    const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 200), []);
+    const debouncedSetFormStatus = useCallback(debounce(setFormStatus, 200), []);
 
     /**
      * 监听表单变化
@@ -67,6 +67,7 @@ function ArrayFieldForm() {
             localStorage.setItem('fieldListInTable', JSON.stringify(fieldListInTable));
             localStorage.setItem('tableActive', JSON.stringify(tableActive));
             localStorage.setItem('tableList', JSON.stringify(tableList));
+            localStorage.setItem('optionsList', JSON.stringify(optionsList));
         }
         return null;
     };
@@ -110,12 +111,12 @@ function ArrayFieldForm() {
                 setLoadingContent('加载本地缓存')
                 const formStatus = JSON.parse(localStorage.getItem('formStatus') || '');
                 setFormStatus(formStatus);
-                console.log('formStatus', formStatus);
+                // console.log('formStatus', formStatus);
                 formApi.current.setValue('table', formStatus.values.table);
                 formApi.current.setValue('field', formStatus.values.field);
                 formApi.current.setValue('autoInput', formStatus.values.autoInput);
-
-                console.log('formApi', formApi.current.getValues())
+                setOptionsList(JSON.parse(localStorage.getItem('optionsList') || ''));
+                // console.log('formApi', formApi.current.getValues())
             }
         }
     }, []);
@@ -230,7 +231,7 @@ function ArrayFieldForm() {
             setOptionsList(undefined)
             const property = chosenField.iFieldMeta.property as ICommonSelectFieldProperty;
             const iSelectFieldOptions = property.options;
-            console.log("iSelectFieldOptions", iSelectFieldOptions);
+            // console.log("iSelectFieldOptions", iSelectFieldOptions);
             if (iSelectFieldOptions) {
                 tempOptionsList[index] = iSelectFieldOptions;
             }
@@ -240,7 +241,7 @@ function ArrayFieldForm() {
     }
     const onSelectTable = async (t: any) => {
         if (formStatus.values.table === tableActive?.id) {
-            console.log('已加载');
+            // console.log('已加载');
             return;
         }
 
