@@ -137,7 +137,6 @@ function ArrayFieldForm() {
 
         // 初始化可选字段数组列表，数组长度为表字段数量，初始时，每个元素包含所有字段
         const fill = new Array(fieldMetaList.length).fill(fieldMetaList.map(({name, id}) => ({name, id})));
-        console.log('fill', fill)
         setFieldListCanChooseList(fill)
         setLoading(false)
         console.log('fieldListCanChooseList', fieldListCanChooseList)
@@ -199,7 +198,7 @@ function ArrayFieldForm() {
         setLoading(true)
         setLoadingContent('获取字段信息中')
         setOptionsList(undefined)
-        console.log('selectedId', selectedId)
+        // console.log('selectedId', selectedId)
         const {fieldMetaList} = fieldInfo!
         const chosenFieldMeta = fieldMetaList.find(({id}) => selectedId === id)!
         const tempOptionsList = optionsList || new Array(fieldMetaList.length)
@@ -207,7 +206,7 @@ function ArrayFieldForm() {
             // getOptions(fieldInfo).then(setOptions);
             const singleSelectField = await tableInfo?.table.getField<ISingleSelectField>(chosenFieldMeta.id as string);
             const iSelectFieldOptions = await singleSelectField?.getOptions();
-            console.log("iSelectFieldOptions", iSelectFieldOptions);
+            // console.log("iSelectFieldOptions", iSelectFieldOptions);
             if (iSelectFieldOptions) {
                 tempOptionsList[index] = iSelectFieldOptions;
             }
@@ -264,15 +263,21 @@ function ArrayFieldForm() {
     const openAutoInput = async (opened: boolean, index: number) => {
         console.log("opened", opened);
         if (opened) {
-
             const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
+            console.log("defaultValue", defaultValue);
             // @ts-ignore
             window.off && window.off.constructor === Function && window.off()
-            if (!fieldInfo || !fieldInfo.field) {
-                console.error("error")
+            if (!fieldInfo) {
+                Toast.error('获取字段信息失败')
+                return
+            }
+            const field = fieldInfo.fieldList.find((field) => field.id === arrayFields[index].name)
+            if (!field) {
+                const {t} = useTranslation();
+                Toast.error(t('field.choose'));
                 return;
             }
-            const fieldId = fieldInfo.field.id;
+            const fieldId = field.id;
             // @ts-ignore
             window.off = tableInfo.table.onRecordAdd(async (ev) => {
                 const recordList = ev.data;
