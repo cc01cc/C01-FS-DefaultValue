@@ -19,8 +19,9 @@ import {Toast} from "@douyinfe/semi-ui";
 export class Utils {
     static async setRecords(toSetTask: any, tableInfo: any) {
         let successCount = 0;
-        console.log("toSetTask", toSetTask.length);
+        // console.log("toSetTask", toSetTask.length);
         const step = 500;
+        console.log("toSetTask", toSetTask)
         for (let index = 0; index < toSetTask.length; index += step) {
             Toast.info("已填充" + toSetTask.length + "条记录")
             const element = toSetTask.slice(index, index + step);

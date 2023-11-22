@@ -31,7 +31,7 @@ import {
 import {debounce} from 'lodash';
 import {fillByIndex} from "./FillDefaultValue";
 import {useTranslation} from "react-i18next";
-import {Utils} from "./Utils";
+import {openAutoInputUtils} from "./utils/arrayFieldFormUtils";
 
 function ArrayFieldForm() {
     const {
@@ -154,8 +154,10 @@ function ArrayFieldForm() {
         })
     }
 
+    /**
+     * 监听数组字段变化，更新可选字段列表
+     */
     useEffect(() => {
-
         // 1. 遍历 arrayFields，获取每个字段的 id
         // 2. 遍历 fieldInfo.fieldMetaList，生成 tempFieldListCanChoose
         // 3. 将 tempFieldListCanChoose 赋值给对应的 tempFieldListCanChooseList 的元素
@@ -194,6 +196,19 @@ function ArrayFieldForm() {
         })
         setFieldListCanChooseList([...specialFieldListCanChooseList])
     }, [arrayFields])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!tableInfo || !fieldInfo) {
+                return;
+            }
+            await openAutoInputUtils(tableInfo, fieldInfo, arrayFields);
+        };
+
+        fetchData();
+    }, [arrayFields]);
+
+
     const onSelectField = async (selectedId: any, index: number) => {
         setLoading(true)
         setLoadingContent('获取字段信息中')
@@ -260,42 +275,50 @@ function ArrayFieldForm() {
         await fillByIndex(tableInfo, fieldInfo, arrayFields, index, defaultValue);
 
     }
+    /**
+     * 开启自动填充
+     * 1. 若 opened 为 true 将字段添加到监听对象并开启自动填充
+     * 2. 若 opened 为 false 将字段移除监听对象列表
+     * @param opened
+     * @param index
+     */
     const openAutoInput = async (opened: boolean, index: number) => {
-        console.log("opened", opened);
-        if (opened) {
-            const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
-            console.log("defaultValue", defaultValue);
-            // @ts-ignore
-            window.off && window.off.constructor === Function && window.off()
-            if (!fieldInfo) {
-                Toast.error('获取字段信息失败')
-                return
-            }
-            const field = fieldInfo.fieldList.find((field) => field.id === arrayFields[index].name)
-            if (!field) {
-                const {t} = useTranslation();
-                Toast.error(t('field.choose'));
-                return;
-            }
-            const fieldId = field.id;
-            // @ts-ignore
-            window.off = tableInfo.table.onRecordAdd(async (ev) => {
-                const recordList = ev.data;
-                console.log("recordList", recordList);
-                const toSetTask = recordList.map((recordId) => ({
-                    recordId,
-                    fields: {
-                        [fieldId]: defaultValue,
-                    }
-                }));
-                console.log("toSetRecord", toSetTask);
-                await Utils.setRecords(toSetTask, tableInfo);
-            })
-        } else {
-            // 关闭监听
-            // @ts-ignore
-            window.off && window.off.constructor === Function && window.off()
-        }
+        // await openAutoInputUtils(tableInfo, arrayFields)
+        // console.log("opened", opened);
+        // if (opened) {
+        //     const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
+        //     console.log("defaultValue", defaultValue);
+        //     // @ts-ignore
+        //     window.off && window.off.constructor === Function && window.off()
+        //     if (!fieldInfo) {
+        //         Toast.error('获取字段信息失败')
+        //         return
+        //     }
+        //     const field = fieldInfo.fieldList.find((field) => field.id === arrayFields[index].name)
+        //     if (!field) {
+        //         const {t} = useTranslation();
+        //         Toast.error(t('field.choose'));
+        //         return;
+        //     }
+        //     const fieldId = field.id;
+        //     // @ts-ignore
+        //     window.off = tableInfo.table.onRecordAdd(async (ev) => {
+        //         const recordList = ev.data;
+        //         console.log("recordList", recordList);
+        //         const toSetTask = recordList.map((recordId) => ({
+        //             recordId,
+        //             fields: {
+        //                 [fieldId]: defaultValue,
+        //             }
+        //         }));
+        //         console.log("toSetRecord", toSetTask);
+        //         await Utils.setRecords(toSetTask, tableInfo);
+        //     })
+        // } else {
+        //     // 关闭监听
+        //     // @ts-ignore
+        //     window.off && window.off.constructor === Function && window.off()
+        // }
     }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
