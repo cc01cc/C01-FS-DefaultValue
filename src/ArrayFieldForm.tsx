@@ -266,8 +266,16 @@ function ArrayFieldForm() {
             return
         }
         await fillByIndex(tableActive, fields, arrayFields, index, formatDefaultValue);
-    }
 
+    }
+    const clickFillAll = async () => {
+        setLoading(true)
+        setLoadingContent('正在填充...')
+        for (let i = 0; i < arrayFields.length; i++) {
+            await clickFill(i);
+        }
+        setLoading(false)
+    }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
             <Form
@@ -367,6 +375,7 @@ function ArrayFieldForm() {
 
 
                     <Button
+                        onClick={clickFillAll}
                         style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
                     >
                         {"全部填充"}
