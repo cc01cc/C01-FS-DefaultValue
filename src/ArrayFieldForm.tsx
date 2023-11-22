@@ -19,14 +19,11 @@ import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/sem
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import {bitable, FieldType, ICommonSelectFieldProperty, ISelectFieldOption, ITable} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
-import {useTranslation} from "react-i18next";
 import {fetchNewData, getDefaultValue, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
 import {FieldListInTable, ZField, ZTable} from "./type/type";
 import {fillByIndex} from "./FillDefaultValue";
 
 function ArrayFieldForm() {
-    const {t} = useTranslation();
-    const [key, setKey] = useState<string | number>(0);
     const [data, setData] = useState<{
         name: string,
         defaultValue: string;
@@ -65,12 +62,7 @@ function ArrayFieldForm() {
         }, [formState.values.field]);
         debouncedSetFormStatus(formState);
         if (formState.values.table) {
-            // console.log('已保存')
             // 将表单状态保存到本地
-            // console.log('s ', formStatus)
-            // console.log('j ', JSON.stringify(formStatus))
-            // console.log('formApi', formApi.current.getValues())
-
             localStorage.setItem('formStatus', JSON.stringify(formStatus));
             localStorage.setItem('fieldListInTable', JSON.stringify(fieldListInTable));
             localStorage.setItem('tableActive', JSON.stringify(tableActive));
@@ -116,7 +108,6 @@ function ArrayFieldForm() {
                 tableListJSON === JSON.stringify(tempTableList) &&
                 localStorage.getItem('formStatus')) {
                 setLoadingContent('加载本地缓存')
-                // console.log('加载本地缓存')
                 const formStatus = JSON.parse(localStorage.getItem('formStatus') || '');
                 setFormStatus(formStatus);
                 console.log('formStatus', formStatus);
@@ -132,7 +123,6 @@ function ArrayFieldForm() {
         if (loading) {
             setLoading(false);
         }
-        // console.log('new fieldListInTable', fieldListInTable);
     }, [fieldListInTable]);
     useEffect(() => {
         // console.log('new fieldListCanChooseList', fieldListCanChooseList);
@@ -172,13 +162,6 @@ function ArrayFieldForm() {
         const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
         setFieldListCanChooseList(fill)
         setLoading(false)
-    }
-
-    /**
-     * 复用上一次的记录
-     */
-    const useLastRecord = () => {
-
     }
 
     /**
@@ -284,57 +267,13 @@ function ArrayFieldForm() {
         }
         await fillByIndex(tableActive, fields, arrayFields, index, formatDefaultValue);
     }
-    /**
-     * 开启自动填充
-     * 1. 若 opened 为 true 将字段添加到监听对象并开启自动填充
-     * 2. 若 opened 为 false 将字段移除监听对象列表
-     * @param opened
-     * @param index
-     */
-    const openAutoInput = async (opened: boolean, index: number) => {
-        // await openAutoInputUtils(tableInfo, arrayFields)
-        // console.log("opened", opened);
-        // if (opened) {
-        //     const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
-        //     console.log("defaultValue", defaultValue);
-        //     // @ts-ignore
-        //     window.off && window.off.constructor === Function && window.off()
-        //     if (!fieldInfo) {
-        //         Toast.error('获取字段信息失败')
-        //         return
-        //     }
-        //     const field = fieldInfo.fieldList.find((field) => field.id === arrayFields[index].name)
-        //     if (!field) {
-        //         const {t} = useTranslation();
-        //         Toast.error(t('field.choose'));
-        //         return;
-        //     }
-        //     const fieldId = field.id;
-        //     // @ts-ignore
-        //     window.off = tableInfo.table.onRecordAdd(async (ev) => {
-        //         const recordList = ev.data;
-        //         console.log("recordList", recordList);
-        //         const toSetTask = recordList.map((recordId) => ({
-        //             recordId,
-        //             fields: {
-        //                 [fieldId]: defaultValue,
-        //             }
-        //         }));
-        //         console.log("toSetRecord", toSetTask);
-        //         await Utils.setRecords(toSetTask, tableInfo);
-        //     })
-        // } else {
-        //     // 关闭监听
-        //     // @ts-ignore
-        //     window.off && window.off.constructor === Function && window.off()
-        // }
-    }
+
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
             <Form
-                wrapperCol={{span: 20}}
-                labelCol={{span: 100}}
-                style={{width: 500}}
+                wrapperCol={{span: 10}}
+                labelCol={{span: 50}}
+                style={{width: 600}}
                 labelPosition='top'
                 // labelWidth='100px'
                 allowEmpty
@@ -342,31 +281,13 @@ function ArrayFieldForm() {
                 onChange={(formState: any) => formApi.current.formState = formState}
             >
                 <div style={{display: 'flex', alignItems: 'center'}}>
-                    <Form.Select style={{width: 200}} onSelect={onSelectTable} label='Table' field="table">
+                    <Form.Select style={{width: 160}} onSelect={onSelectTable} label='Table' field="table">
                         {
                             Array.isArray(tableList) && tableList.map(({id, name}) =>
                                 <Form.Select.Option key={id} value={id}
                                                     defaultValue={tableActive && tableActive.id}>{name}</Form.Select.Option>)
                         }
                     </Form.Select>
-                    <Button
-                        theme="solid"
-                        type="primary"
-                        className="bt1"
-                        onClick={useLastRecord}
-                        style={{margin: 12, alignSelf: 'flex-end'}}
-                    >
-                        {"复用上一次记录"}
-                    </Button>
-                    <Button
-                        theme="solid"
-                        type="primary"
-                        className="bt1"
-                        onClick={fetchNewInfo}
-                        style={{margin: 12, alignSelf: 'flex-end'}}
-                    >
-                        {"刷新数据"}
-                    </Button>
 
                 </div>
 
@@ -380,14 +301,15 @@ function ArrayFieldForm() {
                                 } else {
                                     Toast.error('字段数量已达上限')
                                 }
-                            }} icon={<IconPlusCircle/>} theme='light'>添加字段</Button>
+                            }} icon={<IconPlusCircle/>} theme='light' style={{marginTop: 20}}>添加字段</Button>
+
                             {
                                 arrayFields.map(({field, key, remove}, i) => (
                                     <div key={key} style={{width: '100%', display: 'flex'}}>
                                         <Form.Select
                                             field={`${field}[name]`}
                                             label={`字段名`}
-                                            style={{width: 120, marginRight: 20}}
+                                            style={{width: 160, marginRight: 20}}
                                             onSelect={(selectedId) => onSelectField(selectedId, i)}
                                         >
                                             {
@@ -400,7 +322,7 @@ function ArrayFieldForm() {
                                         <Form.Select
                                             field={`${field}[defaultValue]`}
                                             label={`默认值`}
-                                            style={{width: 120}}
+                                            style={{width: 160}}
                                             // onChange={onSelectOption}
                                             disabled={!optionsList || optionsList.length === 0}
                                         >
@@ -426,7 +348,6 @@ function ArrayFieldForm() {
                                             // noLabel={true}
                                             checkedText='开'
                                             uncheckedText='关'
-                                            onChange={(opened) => openAutoInput(opened, i)}
                                         />
                                         <Button
                                             type='danger'
@@ -444,28 +365,32 @@ function ArrayFieldForm() {
 
                 <div style={{display: 'flex', marginTop: 20}}>
 
-                    <Form.Switch
-                        field="autoInput"
-                        labelPosition={"left"}
-                        labelWidth={100}
-                        label={'全部自动填充'}
-                        // noLabel={true}
-                        checkedText='开'
-                        uncheckedText='关'
-                        // onChange={(v) => openAutoInput(v)}
-                    />
+
                     <Button
-                        theme="solid"
-                        type="primary"
-                        className="bt1"
-                        // onClick={clickFill}
-                        style={{margin: 12, alignSelf: 'flex-end'}}
+                        style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
                     >
                         {"全部填充"}
                     </Button>
+                    <Form.Switch
+                        field="autoInput"
+                        labelPosition={"left"}
+                        label={{text: '全部自动填充', width: '120%'}}
+                        checkedText='开'
+                        uncheckedText='关'
+                        style={{marginRight: 12, marginBottom: 12, alignSelf: 'flex-end'}}
+                    />
+
                     <Button
+                        type='danger'
+                        onClick={fetchNewInfo}
+                        style={{width: 100, marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
+                    >
+                        {"刷新数据"}
+                    </Button>
+                    <Button
+                        type='danger'
                         htmlType="reset"
-                        style={{margin: 12, alignSelf: 'flex-end'}}
+                        style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
                     >重置</Button>
                 </div>
                 <ComponentUsingFormState/>
