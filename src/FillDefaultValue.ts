@@ -18,6 +18,7 @@ import {Toast} from "@douyinfe/semi-ui";
 import {IField, IFieldMeta, IOpenCellValue, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 import {Utils} from "./Utils";
 import {useTranslation} from "react-i18next";
+import {ZField} from "./type/type";
 
 export const fill = async (tableInfo: {
                                table: ITable;
@@ -57,26 +58,12 @@ export const fill = async (tableInfo: {
     await Utils.setRecords(toSetTask, tableInfo);
 }
 
-export const fillByIndex = async (tableInfo: {
-                                      table: ITable;
-                                      tableMeta: ITableMeta;
-                                      tableMetaList: ITableMeta[];
-                                      tableList: ITable[]
-                                  } | undefined,
-                                  fieldInfo: {
-                                      field: IField | undefined;
-                                      fieldMeta: IFieldMeta | undefined;
-                                      fieldList: IField[];
-                                      fieldMetaList: IFieldMeta[]
-                                  } | undefined,
+export const fillByIndex = async (table: ITable,
+                                  fields: ZField[],
                                   arrayFields: any,
                                   index: number,
                                   defaultValue: IOpenCellValue) => {
-    if (!fieldInfo) {
-        Toast.error('字段未选择')
-        return
-    }
-    const field = fieldInfo.fieldList.find((field) => field.id === arrayFields[index].name)
+    const field = fields.find((field) => field.id === arrayFields[index].name)
     if (!field) {
         const {t} = useTranslation();
         Toast.error(t('field.choose'));
@@ -84,8 +71,8 @@ export const fillByIndex = async (tableInfo: {
     }
 
     /** 空的单元格行id */
-    const recordIdList = new Set((await tableInfo?.table.getRecordIdList()));
-    const fieldValueList = (await field.getFieldValueList()).map(({record_id}) => record_id);
+    const recordIdList = new Set((await table.getRecordIdList()));
+    const fieldValueList = (await field.iField.getFieldValueList()).map(({record_id}) => record_id);
     const fieldId = field.id;
     fieldValueList.forEach((id) => {
         recordIdList.delete(id!)
@@ -98,5 +85,5 @@ export const fillByIndex = async (tableInfo: {
         }
     }))
 
-    await Utils.setRecords(toSetTask, tableInfo);
+    await Utils.setRecordsUtils(toSetTask, table);
 }

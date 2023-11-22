@@ -29,8 +29,9 @@ import {
 } from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
 import {useTranslation} from "react-i18next";
-import {fetchNewData, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
+import {fetchNewData, getDefaultValue, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
 import {FieldListInTable, ZField, ZTable} from "./type/type";
+import {fillByIndex} from "./FillDefaultValue";
 
 function ArrayFieldForm() {
     const {t} = useTranslation();
@@ -253,13 +254,14 @@ function ArrayFieldForm() {
     }
 
     const clickFill = async (index: any) => {
-        // const defaultValue = await getCellValue(optionsList, arrayFields, index, fieldInfo, setLoading, t) as IOpenCellValue
-        // if (!defaultValue) {
-        //     Toast.error('获取默认值失败')
-        //     return
-        // }
-        // await fillByIndex(tableInfo, fieldInfo, arrayFields, index, defaultValue);
-
+        const type = fields.find(({id}) => id === arrayFields[index].name)?.iFieldMeta.type as FieldType;
+        const defaultValue = arrayFields[index].defaultValue;
+        const formatDefaultValue = getDefaultValue(defaultValue, type)
+        if (!formatDefaultValue || !tableActive) {
+            Toast.error('获取默认值失败')
+            return
+        }
+        await fillByIndex(tableActive, fields, arrayFields, index, formatDefaultValue);
     }
     /**
      * 开启自动填充
