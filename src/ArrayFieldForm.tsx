@@ -49,7 +49,7 @@ function ArrayFieldForm() {
     const [tableActive, setTableActive] = useState<ITable>();
     const [tableList, setTableList] = useState<ZTable[]>([])
     const [fieldListInTable, setFieldListInTable] = useState<FieldListInTable>()
-
+    const formRef = useRef()!
 
     // 创建防抖函数
     const debouncedSetArrayFields = useCallback(debounce(setArrayFields, 1000), []);
@@ -65,7 +65,7 @@ function ArrayFieldForm() {
         }, [formState.values.field]);
         debouncedSetFormStatus(formState);
         if (formState.values.table) {
-            console.log('已保存')
+            // console.log('已保存')
             // 将表单状态保存到本地
             // console.log('s ', formStatus)
             // console.log('j ', JSON.stringify(formStatus))
@@ -116,11 +116,14 @@ function ArrayFieldForm() {
                 tableListJSON === JSON.stringify(tempTableList) &&
                 localStorage.getItem('formStatus')) {
                 setLoadingContent('加载本地缓存')
-                console.log('加载本地缓存')
+                // console.log('加载本地缓存')
                 const formStatus = JSON.parse(localStorage.getItem('formStatus') || '');
                 setFormStatus(formStatus);
                 console.log('formStatus', formStatus);
-                formApi.current.setValues(formStatus.values);
+                formApi.current.setValue('table', formStatus.values.table);
+                formApi.current.setValue('field', formStatus.values.field);
+                formApi.current.setValue('autoInput', formStatus.values.autoInput);
+
                 console.log('formApi', formApi.current.getValues())
             }
         }
