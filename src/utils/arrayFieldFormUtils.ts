@@ -15,7 +15,7 @@
  */
 
 // 全局变量，存储正在监听的字段
-import {FieldInfoType, FieldListInTable, TableInfoType, ZTable} from "../type/type";
+import {FieldListInTable, ZField, ZTable} from "../type/type";
 import {Utils} from "../Utils";
 import {
     bitable,
@@ -32,30 +32,31 @@ import {
  * 自动填充
  * 1. 从 arrayFields 获取字段信息，以及每个字段自动填充的开启状态
  * 2. 若开启，则放入自动填充列表（因为实时刷新，所以不需要考虑关闭）
- * @param tableInfo
- * @param fieldInfo
+ * @param table
+ * @param fields
  * @param arrayFields
  */
-export const openAutoInputUtils = async (tableInfo: TableInfoType | undefined, fieldInfo: FieldInfoType, arrayFields: any[]) => {
+export const openAutoInputUtils = async (table: ITable, fields: ZField[], arrayFields: any[]) => {
     // 关闭监听
     // @ts-ignore
     window.off && window.off.constructor === Function && window.off()
 
     let fieldIdList: string[] = [], defaultValueList: string[] = [], typeList: FieldType[] = [];
     arrayFields.forEach((arrayField) => {
-        if (arrayField.autoInput && arrayField.name && arrayField.defaultValue) {
+        const fieldMeta = fields.find(fieldMeta => fieldMeta.id === arrayField.name);
+        if (arrayField.autoInput && arrayField.name && arrayField.defaultValue && fieldMeta) {
             // console.log('arrayField', arrayField)
             fieldIdList.push(arrayField.name);
             defaultValueList.push(arrayField.defaultValue);
-            typeList.push(fieldInfo.fieldMetaList.find(fieldMeta => fieldMeta.id === arrayField.name).type);
+            typeList.push(fieldMeta.iFieldMeta.type);
         }
     });
 
     // @ts-ignore
-    window.off = tableInfo.table.onRecordAdd(async (event) => {
+    window.off = table.onRecordAdd(async (event) => {
         const recordList = event.data;
         const toSetTask = recordList.map((recordId) => (getRecordDefaultValue(recordId, fieldIdList, defaultValueList, typeList)));
-        await Utils.setRecords(toSetTask, tableInfo);
+        await Utils.setRecordsUtils(toSetTask, table);
     })
 }
 

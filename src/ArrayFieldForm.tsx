@@ -29,8 +29,8 @@ import {
 } from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
 import {useTranslation} from "react-i18next";
-import {fetchNewData} from "./utils/arrayFieldFormUtils";
-import {FieldListInTable, ZTable} from "./type/type";
+import {fetchNewData, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
+import {FieldListInTable, ZField, ZTable} from "./type/type";
 
 function ArrayFieldForm() {
     const {t} = useTranslation();
@@ -116,7 +116,7 @@ function ArrayFieldForm() {
         console.log('new fieldListCanChooseList', fieldListCanChooseList);
     }, [fieldListCanChooseList]);
 
-    const fields = fieldListInTable?.fields;
+    const fields = fieldListInTable?.fields as ZField[];
     /**
      * 获取新数据
      * 1. 获取表信息
@@ -203,10 +203,10 @@ function ArrayFieldForm() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // if (!tableInfo || !fieldInfo) {
-            //     return;
-            // }
-            // await openAutoInputUtils(tableInfo, fieldInfo, arrayFields);
+            if (!tableActive) {
+                return
+            }
+            await openAutoInputUtils(tableActive, fields, arrayFields);
         };
 
         fetchData();
