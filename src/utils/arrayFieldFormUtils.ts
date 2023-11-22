@@ -17,15 +17,7 @@
 // 全局变量，存储正在监听的字段
 import {FieldInfoType, FieldListInTable, TableInfoType, ZTable} from "../type/type";
 import {Utils} from "../Utils";
-import {
-    bitable,
-    FieldType,
-    IField,
-    IFieldMeta,
-    IOpenCellValue,
-    IOpenSingleSelect,
-    IRecord
-} from "@lark-base-open/js-sdk";
+import {bitable, FieldType, IOpenCellValue, IOpenSingleSelect, IRecord} from "@lark-base-open/js-sdk";
 
 /**
  * 自动填充
@@ -120,41 +112,37 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
 
 export const fetchNewData = async () => {
     // todo 更改表格选项后记得更新 tableActive 等信息
+
     const tableActive = await bitable.base.getActiveTable();
 
-    const tempTableList = await bitable.base.getTableList();
+    const [tempTableList, fields, tableName] = await Promise.all([
+        await bitable.base.getTableList(),
+        await tableActive.getFieldList(),
+        await tableActive.getName(),
+    ])
 
-    let tableList: ZTable[] = []
-    for (const table of tempTableList) {
-        tableList.push({
-            iTable: table,
-            id: table.id,
-            name: await table.getName()
-        })
-    }
+    const tableListPromises = tempTableList.map(async (table) => ({
+        iTable: table,
+        id: table.id,
+        name: await table.getName()
+    }));
 
-    const fields = await tableActive.getFieldList();
+    const tableList: ZTable[] = await Promise.all(tableListPromises);
 
-    let tempFieldList: {
-        [fieldId: string]: {
-            name: string;
-            iField: IField;
-            iFieldMeta: IFieldMeta;
-        }
-    } = {}
-    for (const field of fields) {
-        tempFieldList[field.id] = {
+    const fieldListPromises = fields.map(async (field) => ({
+        [field.id]: {
             name: await field.getName(),
             iField: field,
             iFieldMeta: await field.getMeta()
         }
-    }
+    }));
+    const tempFieldList = Object.assign({}, ...(await Promise.all(fieldListPromises)));
 
     const tempFieldListInTable: FieldListInTable = {
         table: {
             iTable: tableActive,
             id: tableActive.id,
-            name: await tableActive.getName()
+            name: tableName
         },
         fields: tempFieldList
     }
@@ -164,5 +152,4 @@ export const fetchNewData = async () => {
         tableList: tableList,
         fieldListInTable: tempFieldListInTable
     }
-
 }
