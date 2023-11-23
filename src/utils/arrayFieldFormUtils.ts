@@ -23,12 +23,14 @@ import {
     IField,
     IFieldMeta,
     IOpenCellValue,
+    IOpenNumber,
     IOpenSegment,
     IOpenSegmentType,
     IOpenSingleSelect,
     IRecord,
     ITable
 } from "@lark-base-open/js-sdk";
+import {Toast} from "@douyinfe/semi-ui";
 
 /**
  * 自动填充
@@ -103,7 +105,12 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
     console.log('defaultValue', defaultValue)
     switch (type) {
         // TODO 支持更多类型
-        // case FieldType.Number:
+        case FieldType.Number:
+            if (isNaN(Number(defaultValue))) {
+                Toast.error('数字格式错误')
+                return null
+            }
+            return defaultValue as IOpenNumber
         // case FieldType.Rating:
         // case FieldType.Currency:
         case FieldType.MultiSelect:

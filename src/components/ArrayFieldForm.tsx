@@ -272,6 +272,7 @@ function ArrayFieldForm() {
         const formatDefaultValue = getDefaultValue(defaultValue, type)
         if (!formatDefaultValue || !tableActive) {
             Toast.error('获取默认值失败')
+            setLoading(false)
             return
         }
         await fillByIndex(tableActive, fields, arrayFields, index, formatDefaultValue);
