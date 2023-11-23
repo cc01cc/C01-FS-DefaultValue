@@ -230,6 +230,7 @@ function ArrayFieldForm() {
     const onSelectField = async (selectedId: any, index: number) => {
         setLoading(true)
         setLoadingContent('获取字段信息中')
+        formApi.current.setValue(`field[${index}].defaultValue`, undefined);
         // console.log('selectedId', selectedId)
         const chosenField = fields?.find(({id}) => selectedId === id)!
         if (chosenField.iFieldMeta.type === FieldType.SingleSelect) {
