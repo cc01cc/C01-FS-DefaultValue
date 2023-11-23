@@ -28,9 +28,9 @@ import {
 import {RefObject, useEffect, useMemo, useRef, useState} from "react";
 import {Button, Col, Form, Row, Spin, Toast} from "@douyinfe/semi-ui";
 import {useTranslation} from 'react-i18next';
-import {fill} from "./FillDefaultValue";
-import {Utils} from "./Utils";
-import ArrayFieldForm from "./ArrayFieldForm";
+import {fill} from "./utils/FillDefaultValue";
+import {Utils} from "./utils/Utils";
+import ArrayFieldForm from "./components/ArrayFieldForm";
 
 /** 支持填入默认值的字段 */
 const f = [FieldType.SingleSelect]

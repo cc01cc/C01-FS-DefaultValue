@@ -18,7 +18,7 @@ import {Toast} from "@douyinfe/semi-ui";
 import {IField, IFieldMeta, IOpenCellValue, ITable, ITableMeta} from "@lark-base-open/js-sdk";
 import {Utils} from "./Utils";
 import {useTranslation} from "react-i18next";
-import {ZField} from "./type/type";
+import {ZField} from "../type/type";
 
 export const fill = async (tableInfo: {
                                table: ITable;

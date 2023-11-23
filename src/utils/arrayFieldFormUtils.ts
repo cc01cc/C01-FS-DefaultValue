@@ -16,7 +16,7 @@
 
 // 全局变量，存储正在监听的字段
 import {FieldListInTable, ZField, ZTable} from "../type/type";
-import {Utils} from "../Utils";
+import {Utils} from "./Utils";
 import {
     bitable,
     FieldType,
@@ -120,19 +120,19 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
     return undefined;
 }
 
-export const fetchNewData = async (): Promise<{
+export const fetchNewData = async (chosenTable: ITable): Promise<{
     tableActive: ITable,
     tableList: ZTable[],
     fieldListInTable: FieldListInTable,
 }> => {
-    // todo 更改表格选项后记得更新 tableActive 等信息
+    // todo 更改表格选项后记得更新 chosenTable 等信息
 
-    const tableActive = await bitable.base.getActiveTable();
+    // const chosenTable = await bitable.base.getActiveTable();
 
     const [tempTableList, fields, tableName] = await Promise.all([
         await bitable.base.getTableList(),
-        await tableActive.getFieldList(),
-        await tableActive.getName(),
+        await chosenTable.getFieldList(),
+        await chosenTable.getName(),
     ])
 
     const tableListPromises = tempTableList.map(async (table) => ({
@@ -153,15 +153,15 @@ export const fetchNewData = async (): Promise<{
 
     const tempFieldListInTable: FieldListInTable = {
         table: {
-            iTable: tableActive,
-            id: tableActive.id,
+            iTable: chosenTable,
+            id: chosenTable.id,
             name: tableName
         },
         fields: tempFieldList
     }
 
     return {
-        tableActive: tableActive,
+        tableActive: chosenTable,
         tableList: tableList,
         fieldListInTable: tempFieldListInTable,
     }

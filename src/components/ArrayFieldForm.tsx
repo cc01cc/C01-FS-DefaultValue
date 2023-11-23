@@ -19,9 +19,9 @@ import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/sem
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import {bitable, FieldType, ICommonSelectFieldProperty, ISelectFieldOption, ITable} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
-import {fetchNewData, getDefaultValue, openAutoInputUtils} from "./utils/arrayFieldFormUtils";
-import {FieldListInTable, ZField, ZTable} from "./type/type";
-import {fillByIndex} from "./FillDefaultValue";
+import {fetchNewData, getDefaultValue, openAutoInputUtils} from "../utils/arrayFieldFormUtils";
+import {FieldListInTable, ZField, ZTable} from "../type/type";
+import {fillByIndex} from "../utils/FillDefaultValue";
 
 function ArrayFieldForm() {
     const [data, setData] = useState<{
@@ -91,7 +91,7 @@ function ArrayFieldForm() {
             setLoading(true)
             setLoadingContent('初始化')
 
-            const newData = await fetchNewData();
+            const newData = await fetchNewData(await bitable.base.getActiveTable());
             const tempTableActive = newData.tableActive;
             const tempTableList = newData.tableList;
             const tempFieldListInTable = newData.fieldListInTable;
@@ -139,9 +139,14 @@ function ArrayFieldForm() {
      * 4. 初始化可选字段列表
      */
     const fetchNewInfo = async () => {
+        const tableActiveId = formStatus.values.table;
+        await fetchNewInfoWithTable(tableActiveId)
+    }
+    const fetchNewInfoWithTable = async (tableId: string) => {
         // 刷新时添加加载状态
         setLoading(true)
         setLoadingContent('刷新数据中')
+
         const selection = await bitable.base.getSelection();
         console.log("selection", selection);
         if (!selection.tableId) {
@@ -154,7 +159,15 @@ function ArrayFieldForm() {
         // 清空本地缓存
         localStorage.clear();
 
-        const newData = await fetchNewData();
+
+        let tableActive;
+        if (tableId) {
+            tableActive = await bitable.base.getTable(tableId);
+        } else {
+            tableActive = await bitable.base.getActiveTable();
+        }
+        console.log('tableActive', tableActive);
+        const newData = await fetchNewData(tableActive);
         setTableActive(newData.tableActive);
         setTableList(newData.tableList);
         setFieldListInTable(newData.fieldListInTable);
@@ -164,7 +177,6 @@ function ArrayFieldForm() {
         setFieldListCanChooseList(fill)
         setLoading(false)
     }
-
     /**
      * 监听数组字段变化，更新可选字段列表
      */
@@ -240,21 +252,15 @@ function ArrayFieldForm() {
         setLoading(false)
     }
     const onSelectTable = async (t: any) => {
-        if (formStatus.values.table === tableActive?.id) {
-            // console.log('已加载');
+        if (t === tableActive?.id) {
+            console.log('已加载');
             return;
         }
 
         setLoading(true);
         setLoadingContent('获取表信息中')
-
-        const newData = await fetchNewData();
-        setTableActive(newData.tableActive);
-        setTableList(newData.tableList);
-        setFieldListInTable(newData.fieldListInTable);
-
-        const fill = new Array(fields?.length).fill(fields?.map(({name, id}) => ({name, id})));
-        setFieldListCanChooseList(fill)
+        console.log('t', t)
+        await fetchNewInfoWithTable(t)
         setLoading(false)
     }
 
