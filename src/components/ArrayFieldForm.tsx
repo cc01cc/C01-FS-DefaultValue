@@ -414,6 +414,15 @@ function ArrayFieldForm() {
                                                                                     }
                                                                                 </Form.Select>
                                                                             )
+                                                                        // case FieldType.Checkbox:
+                                                                        //     return(
+                                                                        //         <Form.Checkbox
+                                                                        //             value="false"
+                                                                        //             field={`${field}[defaultValue]`}
+                                                                        //             style={{width: 160, marginTop: 10}}
+                                                                        //             label={`默认值`}
+                                                                        //         />
+                                                                        //     )
                                                                         case FieldType.Text:
                                                                         case FieldType.Number:
                                                                         case FieldType.Rating:

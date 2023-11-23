@@ -113,6 +113,8 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
             return defaultValue as IOpenNumber
         // case FieldType.Rating:
         // case FieldType.Currency:
+        // case FieldType.Checkbox:
+        //     return typeof defaultValue ==='boolean'? defaultValue as IOpenCheckbox : null
         case FieldType.MultiSelect:
             return defaultValue.map((id: string) => ({id, text: ""})) as IOpenSingleSelect[]
         case FieldType.Text:
