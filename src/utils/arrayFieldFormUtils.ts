@@ -46,6 +46,7 @@ export const openAutoInputUtils = async (table: ITable, fields: ZField[], arrayF
     window.off && window.off.constructor === Function && window.off()
 
     let fieldIdList: string[] = [], defaultValueList: string[] = [], typeList: FieldType[] = [];
+    // 查找需要自动添加记录的字段
     arrayFields.forEach((arrayField) => {
         const fieldMeta = fields.find(fieldMeta => fieldMeta.id === arrayField.name);
         if (arrayField.autoInput && arrayField.name && arrayField.defaultValue && fieldMeta) {
@@ -55,6 +56,10 @@ export const openAutoInputUtils = async (table: ITable, fields: ZField[], arrayF
             typeList.push(fieldMeta.iFieldMeta.type);
         }
     });
+    // 若没有字段开启自动填充，则返回，不再开启监听
+    if (!fieldIdList || !fieldIdList.length) {
+        return;
+    }
 
     // @ts-ignore
     window.off = table.onRecordAdd(async (event) => {
@@ -139,7 +144,7 @@ export const fetchNewData = async (chosenTable: ITable): Promise<{
     fieldListInTable: FieldListInTable,
 }> => {
     /** 支持填入默认值的字段 */
-    const supportFieldType = [FieldType.SingleSelect, FieldType.SingleSelect, FieldType.MultiSelect, FieldType.Text, FieldType.Number, FieldType.Phone]
+    const supportFieldType = [FieldType.SingleSelect, FieldType.MultiSelect, FieldType.Text, FieldType.Number, FieldType.Phone]
 
     const [tempTableList, fields, tableName] = await Promise.all([
         await bitable.base.getTableList(),

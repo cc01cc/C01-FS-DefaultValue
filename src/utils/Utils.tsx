@@ -55,7 +55,7 @@ export class Utils {
             }).catch((e: any) => {
                 console.error(e)
             });
-            // Toast.info("已填充" + successCount + "条记录")
+            Toast.info("已填充" + successCount + "条记录")
             await new Promise((resolve) => {
                 setTimeout(() => {
                     resolve('')
