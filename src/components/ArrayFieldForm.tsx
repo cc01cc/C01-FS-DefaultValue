@@ -80,9 +80,8 @@ function ArrayFieldForm() {
             {name: 'Designer', defaultValue: 'Designer'},
         ])
 
-
         init().catch((e) => {
-            Toast.error('table.err')
+            Toast.error('初始化失败，请尝试刷新数据')
             console.error(e)
         });
 
@@ -102,7 +101,6 @@ function ArrayFieldForm() {
             const fieldListInTableJSON = localStorage.getItem('fieldListInTable');
             const tableActiveJSON = localStorage.getItem('tableActive');
             const tableListJSON = localStorage.getItem('tableList');
-
 
             if (fieldListInTableJSON === JSON.stringify(tempFieldListInTable) &&
                 tableActiveJSON === JSON.stringify(tempTableActive) &&
@@ -158,7 +156,6 @@ function ArrayFieldForm() {
 
         // 清空本地缓存
         localStorage.clear();
-
 
         let tableActive;
         if (tableId) {
@@ -229,7 +226,6 @@ function ArrayFieldForm() {
 
         fetchData();
     }, [arrayFields]);
-
 
     const onSelectField = async (selectedId: any, index: number) => {
         setLoading(true)
@@ -308,123 +304,169 @@ function ArrayFieldForm() {
                 allowEmpty
                 getFormApi={(a: any) => formApi.current = a}
                 onChange={(formState: any) => formApi.current.formState = formState}
-            >
-                <div style={{display: 'flex', alignItems: 'center'}}>
-                    <Form.Select style={{width: 160}} onSelect={onSelectTable} label='Table' field="table">
-                        {
-                            Array.isArray(tableList) && tableList.map(({id, name}) =>
-                                <Form.Select.Option key={id} value={id}
-                                                    defaultValue={tableActive && tableActive.id}>{name}</Form.Select.Option>)
-                        }
-                    </Form.Select>
-
-                </div>
-
-
-                <ArrayField field='field' initValue={data}>
-                    {({add, arrayFields, addWithInitValue}) => (
-                        <React.Fragment>
-                            <Button onClick={() => {
-                                if (arrayFields.length < fieldListCanChooseList.length) {
-                                    add();
-                                } else {
-                                    Toast.error('字段数量已达上限')
+                render={({formState, formApi, values}) => (
+                    <>
+                        <div style={{display: 'flex', alignItems: 'center'}}>
+                            <Form.Select style={{width: 160}} onSelect={onSelectTable} label='Table' field="table">
+                                {
+                                    Array.isArray(tableList) && tableList.map(({id, name}) =>
+                                        <Form.Select.Option key={id} value={id}
+                                                            defaultValue={tableActive && tableActive.id}>{name}</Form.Select.Option>)
                                 }
-                            }} icon={<IconPlusCircle/>} theme='light' style={{marginTop: 20}}>添加字段</Button>
+                            </Form.Select>
 
-                            {
-                                arrayFields.map(({field, key, remove}, i) => (
-                                    <div key={key} style={{width: '100%', display: 'flex'}}>
-                                        <Form.Select
-                                            field={`${field}[name]`}
-                                            label={`字段名`}
-                                            style={{width: 160, marginRight: 20}}
-                                            onSelect={(selectedId) => onSelectField(selectedId, i)}
-                                        >
-                                            {
-                                                fieldListCanChooseList && fieldListCanChooseList[i] && fieldListCanChooseList[i].map(({id, name}) =>
-                                                    <Form.Select.Option
-                                                        key={id}
-                                                        value={id}>{name}</Form.Select.Option>)
+                        </div>
+
+                        <ArrayField field='field' initValue={data}>
+                            {({add, arrayFields, addWithInitValue}) => (
+                                <React.Fragment>
+                                    <Button onClick={() => {
+                                        if (arrayFields.length < fieldListCanChooseList.length) {
+                                            add();
+                                        } else {
+                                            Toast.error('字段数量已达上限')
+                                        }
+                                    }} icon={<IconPlusCircle/>} theme='light' style={{marginTop: 20}}>添加字段</Button>
+
+                                    {
+                                        arrayFields.map(({field, key, remove}, i) => {
+                                            const tempFormStateValue = formState.values
+                                            let fieldElement: any;
+                                            let zField;
+                                            if (tempFormStateValue.field) {
+                                                fieldElement = tempFormStateValue.field[i];
                                             }
-                                        </Form.Select>
-                                        <Form.Select
-                                            field={`${field}[defaultValue]`}
-                                            label={`默认值`}
-                                            style={{width: 160}}
-                                            // onChange={onSelectOption}
-                                            disabled={!optionsList || optionsList.length === 0}
-                                        >
-                                            {
-                                                optionsList && optionsList[i] && optionsList[i].map(({id, name}) =>
-                                                    <Form.Select.Option key={id}
-                                                                        value={id}>{name || "null"}</Form.Select.Option>)
+                                            if (fieldElement) {
+                                                zField = fields.find(({id}) => id === fieldElement.name);
                                             }
-                                        </Form.Select>
-                                        <Button
-                                            theme="solid"
-                                            type="primary"
-                                            className="bt1"
-                                            onClick={() => clickFill(i)}
-                                            style={{margin: 12, alignSelf: 'flex-end'}}
-                                        >
-                                            {"填充"}
-                                        </Button>
+                                            // console.log('zField', zField)
+                                            return (
+                                                <div key={key} style={{width: '100%', display: 'flex'}}>
+                                                    <Form.Select
+                                                        field={`${field}[name]`}
+                                                        label={`字段名`}
+                                                        style={{width: 160, marginRight: 20}}
+                                                        onSelect={(selectedId) => onSelectField(selectedId, i)}
+                                                    >
+                                                        {
+                                                            fieldListCanChooseList && fieldListCanChooseList[i] && fieldListCanChooseList[i].map(({
+                                                                                                                                                      id,
+                                                                                                                                                      name
+                                                                                                                                                  }) =>
+                                                                <Form.Select.Option
+                                                                    key={id}
+                                                                    value={id}>{name}</Form.Select.Option>)
+                                                        }
+                                                    </Form.Select>
+                                                    {
+                                                        fieldElement && zField ?
+                                                            (
+                                                                (() => {
+                                                                    switch (zField.iFieldMeta.type) {
+                                                                        case FieldType.SingleSelect:
+                                                                            return (
+                                                                                <Form.Select
+                                                                                    field={`${field}[defaultValue]`}
+                                                                                    label={`默认值`}
+                                                                                    style={{width: 160}}
+                                                                                    disabled={!optionsList || optionsList.length === 0}
+                                                                                >
+                                                                                    {
+                                                                                        optionsList && optionsList[i] && optionsList[i].map(({
+                                                                                                                                                 id,
+                                                                                                                                                 name
+                                                                                                                                             }) =>
+                                                                                            <Form.Select.Option key={id}
+                                                                                                                value={id}>{name || "null"}</Form.Select.Option>)
+                                                                                    }
+                                                                                </Form.Select>
+                                                                            );
+                                                                        case FieldType.Text:
+                                                                        case FieldType.Number:
+                                                                        case FieldType.Rating:
+                                                                        case FieldType.Currency:
+                                                                            return (
+                                                                                <Form.Input
+                                                                                    field={`${field}[defaultValue]`}
+                                                                                    label={`默认值`}
+                                                                                    style={{width: 160}}/>
+                                                                            );
+                                                                        default:
+                                                                            // Toast.error("不支持此类型字段");
+                                                                            return null
+                                                                    }
+                                                                })()
+                                                            ) : null
+                                                    }
+                                                    <Button
+                                                        theme="solid"
+                                                        type="primary"
+                                                        className="bt1"
+                                                        onClick={() => clickFill(i)}
+                                                        style={{margin: 12, alignSelf: 'flex-end'}}
+                                                    >
+                                                        {"填充"}
+                                                    </Button>
 
-                                        <Form.Switch
-                                            field={`${field}[autoInput]`}
-                                            label={{text: '自动填充', width: '100%'}}
-                                            // noLabel={true}
-                                            checkedText='开'
-                                            uncheckedText='关'
-                                        />
-                                        <Button
-                                            type='danger'
-                                            theme='borderless'
-                                            icon={<IconMinusCircle/>}
-                                            onClick={remove}
-                                            style={{margin: 12, alignSelf: 'flex-end'}}
-                                        />
-                                    </div>
-                                ))
-                            }
-                        </React.Fragment>
-                    )}
-                </ArrayField>
+                                                    <Form.Switch
+                                                        field={`${field}[autoInput]`}
+                                                        label={{text: '自动填充', width: '100%'}}
+                                                        // noLabel={true}
+                                                        checkedText='开'
+                                                        uncheckedText='关'
+                                                    />
+                                                    <Button
+                                                        type='danger'
+                                                        theme='borderless'
+                                                        icon={<IconMinusCircle/>}
+                                                        onClick={remove}
+                                                        style={{margin: 12, alignSelf: 'flex-end'}}
+                                                    />
+                                                </div>
+                                            );
+                                        })
+                                    }
+                                </React.Fragment>
+                            )}
+                        </ArrayField>
 
-                <div style={{display: 'flex', marginTop: 20}}>
+                        <div style={{display: 'flex', marginTop: 20}}>
 
+                            <Button
+                                onClick={clickFillAll}
+                                style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
+                            >
+                                {"批量填充"}
+                            </Button>
+                            <Form.Switch
+                                field="autoInput"
+                                labelPosition={"left"}
+                                label={{text: '批量自动', width: '120%'}}
+                                checkedText='开'
+                                uncheckedText='关'
+                                style={{marginRight: 12, marginBottom: 12, alignSelf: 'flex-end'}}
+                                onChange={clickAutoInputAll}
+                            />
 
-                    <Button
-                        onClick={clickFillAll}
-                        style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
-                    >
-                        {"批量填充"}
-                    </Button>
-                    <Form.Switch
-                        field="autoInput"
-                        labelPosition={"left"}
-                        label={{text: '批量自动', width: '120%'}}
-                        checkedText='开'
-                        uncheckedText='关'
-                        style={{marginRight: 12, marginBottom: 12, alignSelf: 'flex-end'}}
-                        onChange={clickAutoInputAll}
-                    />
+                            <Button
+                                type='danger'
+                                onClick={fetchNewInfo}
+                                style={{width: 100, marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
+                            >
+                                {"刷新数据"}
+                            </Button>
+                            <Button
+                                type='danger'
+                                htmlType="reset"
+                                style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
+                            >重置</Button>
+                        </div>
+                        <ComponentUsingFormState/>
 
-                    <Button
-                        type='danger'
-                        onClick={fetchNewInfo}
-                        style={{width: 100, marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
-                    >
-                        {"刷新数据"}
-                    </Button>
-                    <Button
-                        type='danger'
-                        htmlType="reset"
-                        style={{marginRight: 12, marginBottom: 20, alignSelf: 'flex-end'}}
-                    >重置</Button>
-                </div>
-                <ComponentUsingFormState/>
+                    </>
+                )}
+            >
+
             </Form>
         </Spin>
     );
