@@ -19,4 +19,10 @@
 
 1. 自动填充开启后再关闭，填充记录数量统计存在误差
 
-> 飞书文档 <https://pzhajeklav.feishu.cn/docx/EQcvdivToouFqmxL5LxcKRc5nEh?from=from_copylink>
+## 在线文档
+
+飞书文档（含 GIF 演示） <https://pzhajeklav.feishu.cn/docx/EQcvdivToouFqmxL5LxcKRc5nEh?from=from_copylink>
+
+## API 文档
+
+Base JS SDK | Base JS SDK <https://lark-base-team.github.io/js-sdk-docs/zh/>
