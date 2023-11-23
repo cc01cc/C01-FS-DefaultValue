@@ -23,6 +23,8 @@ import {
     IField,
     IFieldMeta,
     IOpenCellValue,
+    IOpenSegment,
+    IOpenSegmentType,
     IOpenSingleSelect,
     IRecord,
     ITable
@@ -104,10 +106,9 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
         // case FieldType.Number:
         // case FieldType.Rating:
         // case FieldType.Currency:
-        // case FieldType.Text:
-        //   // console.log('number', restFormValue)
-        //   value = getRandom({ max, min, ...restFormValue })
-        //   break;
+        case FieldType.Text:
+            // console.log('number', restFormValue)
+            return [{type: IOpenSegmentType.Text, text: defaultValue}] as IOpenSegment[]
         // case FieldType.Text:
         //   console.log('text', restFormValue)
         //   value = [{type: IOpenSegmentType.Text, text: String(getRandom({max, min, ...restFormValue}))}]

@@ -263,6 +263,8 @@ function ArrayFieldForm() {
     const clickFill = async (index: any) => {
         const type = fields.find(({id}) => id === arrayFields[index].name)?.iFieldMeta.type as FieldType;
         const defaultValue = arrayFields[index].defaultValue;
+        // console.log('type', type, defaultValue)
+        Toast.info(`正在填充默认值「${defaultValue}」`)
         const formatDefaultValue = getDefaultValue(defaultValue, type)
         if (!formatDefaultValue || !tableActive) {
             Toast.error('获取默认值失败')
