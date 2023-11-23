@@ -233,7 +233,7 @@ function ArrayFieldForm() {
         formApi.current.setValue(`field[${index}].defaultValue`, undefined);
         // console.log('selectedId', selectedId)
         const chosenField = fields?.find(({id}) => selectedId === id)!
-        if (chosenField.iFieldMeta.type === FieldType.SingleSelect) {
+        if (chosenField.iFieldMeta.type === FieldType.SingleSelect || chosenField.iFieldMeta.type === FieldType.MultiSelect) {
             // 如果已经存在 optionsList 则覆盖，只需修改字段对应的 option 即可，不用整个 optionList；若不存在，则新建
             // todo 考虑字段增减情况下的同步问题
             const tempOptionsList = optionsList || new Array(arrayFields.length)
@@ -262,17 +262,20 @@ function ArrayFieldForm() {
     }
 
     const clickFill = async (index: any) => {
+        setLoading(true)
+        setLoadingContent('正在填充...')
         const type = fields.find(({id}) => id === arrayFields[index].name)?.iFieldMeta.type as FieldType;
         const defaultValue = arrayFields[index].defaultValue;
+        console.log('arrayFields', arrayFields[index])
         // console.log('type', type, defaultValue)
-        Toast.info(`正在填充默认值「${defaultValue}」`)
+        // Toast.info(`正在填充默认值「${defaultValue}」`)
         const formatDefaultValue = getDefaultValue(defaultValue, type)
         if (!formatDefaultValue || !tableActive) {
             Toast.error('获取默认值失败')
             return
         }
         await fillByIndex(tableActive, fields, arrayFields, index, formatDefaultValue);
-
+        setLoading(false)
     }
     const clickFillAll = async () => {
         setLoading(true)
@@ -384,6 +387,26 @@ function ArrayFieldForm() {
                                                                                     }
                                                                                 </Form.Select>
                                                                             );
+                                                                        case FieldType.MultiSelect:
+                                                                            return (
+                                                                                <Form.Select
+                                                                                    field={`${field}[defaultValue]`}
+                                                                                    multiple
+                                                                                    // placeholder='请选择业务线'
+                                                                                    label={`默认值`}
+                                                                                    style={{width: 160}}
+                                                                                    disabled={!optionsList || optionsList.length === 0}
+                                                                                >
+                                                                                    {
+                                                                                        optionsList && optionsList[i] && optionsList[i].map(({
+                                                                                                                                                 id,
+                                                                                                                                                 name
+                                                                                                                                             }) =>
+                                                                                            <Form.Select.Option key={id}
+                                                                                                                value={id}>{name || "null"}</Form.Select.Option>)
+                                                                                    }
+                                                                                </Form.Select>
+                                                                            )
                                                                         case FieldType.Text:
                                                                         case FieldType.Number:
                                                                         case FieldType.Rating:

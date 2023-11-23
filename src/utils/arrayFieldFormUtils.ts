@@ -99,13 +99,15 @@ export const getFieldDefaultValue = (fieldId: string, defaultValue: any, type: F
     return {[fieldId]: value}
 }
 
-export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellValue | undefined => {
-
+export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellValue => {
+    console.log('defaultValue', defaultValue)
     switch (type) {
         // TODO 支持更多类型
         // case FieldType.Number:
         // case FieldType.Rating:
         // case FieldType.Currency:
+        case FieldType.MultiSelect:
+            return defaultValue.map((id: string) => ({id, text: ""})) as IOpenSingleSelect[]
         case FieldType.Text:
             // console.log('number', restFormValue)
             return [{type: IOpenSegmentType.Text, text: defaultValue}] as IOpenSegment[]
@@ -116,9 +118,8 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
         case FieldType.SingleSelect:
             return {id: defaultValue, text: ""} as IOpenSingleSelect
         default:
-            break;
+            return null;
     }
-    return undefined;
 }
 
 export const fetchNewData = async (chosenTable: ITable): Promise<{
