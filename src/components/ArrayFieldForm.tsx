@@ -299,6 +299,13 @@ function ArrayFieldForm() {
             window.off && window.off.constructor === Function && window.off()
         }
     }
+    const optionListRemove = (index: number) => {
+        const tempOptionsList = optionsList
+        if (tempOptionsList) {
+            tempOptionsList.splice(index, 1);
+            setOptionsList([...tempOptionsList])
+        }
+    }
     return (
         <Spin style={{height: '100vh'}} tip={loadingContent} size="large" spinning={loading}>
             <Form
@@ -320,7 +327,6 @@ function ArrayFieldForm() {
                                                             defaultValue={tableActive && tableActive.id}>{name}</Form.Select.Option>)
                                 }
                             </Form.Select>
-
                         </div>
 
                         <ArrayField field='field' initValue={data}>
@@ -445,7 +451,10 @@ function ArrayFieldForm() {
                                                         type='danger'
                                                         theme='borderless'
                                                         icon={<IconMinusCircle/>}
-                                                        onClick={remove}
+                                                        onClick={() => {
+                                                            remove();
+                                                            optionListRemove(i);
+                                                        }}
                                                         style={{margin: 12, alignSelf: 'flex-end'}}
                                                     />
                                                 </div>
