@@ -188,17 +188,34 @@ export const fetchNewData = async (chosenTable: ITable): Promise<{
 
 // 定义一个类来管理事件监听
 export class AutoInputManager {
+    private static instance: AutoInputManager | null = null;
     private table: ITable;
     private fields: ZField[];
     private arrayFields: any[];
     private listener: (() => void) | null = null;
 
-    constructor(table: ITable, fields: ZField[], arrayFields: any[]) {
+    private constructor(table: ITable, fields: ZField[], arrayFields: any[]) {
         this.table = table;
         this.fields = fields;
         this.arrayFields = arrayFields;
     }
 
+    public static getInstance(table: ITable, fields: ZField[], arrayFields: any[]): AutoInputManager {
+        if (!AutoInputManager.instance) {
+            AutoInputManager.instance = new AutoInputManager(table, fields, arrayFields);
+        }
+        return AutoInputManager.instance;
+    }
+
+    public updateFields(fields: ZField[], arrayFields: any[]) {
+        this.fields = fields;
+        this.arrayFields = arrayFields;
+
+        // 可以在这里添加逻辑来重新配置或重启事件监听器
+        // 比如关闭当前监听器并重新打开一个新的
+        this.close();
+        this.open();
+    }
     // 开启事件监听
     public open() {
         if (this.listener) {

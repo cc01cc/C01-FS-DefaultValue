@@ -118,7 +118,6 @@ function ArrayFieldForm() {
                 // console.log('formApi', formApi.current.getValues())
             }
 
-            manager = new AutoInputManager(tempTableActive, fields, arrayFields)
         }
     }, []);
     useEffect(() => {
@@ -219,25 +218,18 @@ function ArrayFieldForm() {
         setFieldListCanChooseList([...specialFieldListCanChooseList])
     }, [arrayFields])
 
-    let manager: AutoInputManager;
     useEffect(() => {
             const fetchData = async () => {
-                    if (!tableActive) {
-                        return
-                    }
-                    // await openAutoInputUtils(tableActive, fields, arrayFields);
-                    if (!manager) {
-                        manager = new AutoInputManager(tableActive, fields, arrayFields); // 关闭监听
-                    }
-
-                    manager.open(); // 开启监听
+                if (!tableActive) {
+                    return
                 }
-            ;
-
+                const manager = AutoInputManager.getInstance(tableActive, fields, arrayFields);
+                manager.updateFields(fields, arrayFields); // 更新字段
+                manager.open(); // 开启监听
+            };
             fetchData();
         }, [arrayFields]
-    )
-    ;
+    );
 
     const onSelectField = async (selectedId: any, index: number) => {
         setLoading(true)
