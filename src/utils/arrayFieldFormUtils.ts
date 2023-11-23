@@ -24,6 +24,7 @@ import {
     IFieldMeta,
     IOpenCellValue,
     IOpenNumber,
+    IOpenPhone,
     IOpenSegment,
     IOpenSegmentType,
     IOpenSingleSelect,
@@ -112,7 +113,9 @@ export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellVa
             }
             return defaultValue as IOpenNumber
         // case FieldType.Rating:
-        // case FieldType.Currency:
+        case FieldType.Phone:
+            return typeof defaultValue === 'string' ? defaultValue as IOpenPhone : null
+        case FieldType.Currency:
         // case FieldType.Checkbox:
         //     return typeof defaultValue ==='boolean'? defaultValue as IOpenCheckbox : null
         case FieldType.MultiSelect:

@@ -425,8 +425,8 @@ function ArrayFieldForm() {
                                                                         //     )
                                                                         case FieldType.Text:
                                                                         case FieldType.Number:
-                                                                        case FieldType.Rating:
-                                                                        case FieldType.Currency:
+                                                                        case FieldType.Phone:
+
                                                                             return (
                                                                                 <Form.Input
                                                                                     field={`${field}[defaultValue]`}
