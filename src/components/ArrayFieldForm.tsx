@@ -23,6 +23,7 @@ import {fetchNewData, getDefaultValue, openAutoInputUtils} from "../utils/arrayF
 import {FieldListInTable, ZField, ZTable} from "../type/type";
 import {fillByIndex} from "../utils/FillDefaultValue";
 
+
 function ArrayFieldForm() {
     const [data, setData] = useState<{
         name: string,

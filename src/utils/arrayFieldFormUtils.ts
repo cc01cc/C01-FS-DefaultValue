@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-// 全局变量，存储正在监听的字段
 import {FieldListInTable, ZField, ZTable} from "../type/type";
 import {Utils} from "./Utils";
 import {
@@ -139,9 +138,8 @@ export const fetchNewData = async (chosenTable: ITable): Promise<{
     tableList: ZTable[],
     fieldListInTable: FieldListInTable,
 }> => {
-    // todo 更改表格选项后记得更新 chosenTable 等信息
-
-    // const chosenTable = await bitable.base.getActiveTable();
+    /** 支持填入默认值的字段 */
+    const supportFieldType = [FieldType.SingleSelect, FieldType.SingleSelect, FieldType.MultiSelect, FieldType.Text, FieldType.Number, FieldType.Phone]
 
     const [tempTableList, fields, tableName] = await Promise.all([
         await bitable.base.getTableList(),
@@ -171,7 +169,8 @@ export const fetchNewData = async (chosenTable: ITable): Promise<{
             id: chosenTable.id,
             name: tableName
         },
-        fields: tempFieldList
+        // 筛选符合支持填入默认值的字段
+        fields: tempFieldList.filter((field) => supportFieldType.includes(field.iFieldMeta.type))
     }
 
     return {
