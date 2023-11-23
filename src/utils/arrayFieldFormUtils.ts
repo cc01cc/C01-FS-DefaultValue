@@ -72,7 +72,7 @@ export const openAutoInputUtils = async (table: ITable, fields: ZField[], arrayF
 
 export const getRecordDefaultValue = (recordId: string, fieldIdList: string[], defaultValueList: any[], typeList: FieldType[]): IRecord | undefined => {
     const value = getMulFieldDefaultValue(fieldIdList, defaultValueList, typeList)
-    console.log('value', value)
+    // console.log('value', value)
     if (!value) {
         return undefined;
     }
@@ -90,13 +90,13 @@ export const getMulFieldDefaultValue = (fieldId: string[], defaultValue: any[], 
     } = {};
     for (let i = 0; i < fieldId.length; i++) {
         const temp = getDefaultValue(defaultValue[i], type[i]);
-        console.log('temp', temp)
+        // console.log('temp', temp)
         if (!temp) {
             continue;
         }
         value[fieldId[i]] = temp;  // 将 temp 添加到 value 对象中
     }
-    console.log('value getMulFieldDefaultValue', value)
+    // console.log('value getMulFieldDefaultValue', value)
     return value;
 }
 export const getFieldDefaultValue = (fieldId: string, defaultValue: any, type: FieldType) => {
@@ -108,7 +108,7 @@ export const getFieldDefaultValue = (fieldId: string, defaultValue: any, type: F
 }
 
 export const getDefaultValue = (defaultValue: any, type: FieldType): IOpenCellValue => {
-    console.log('defaultValue', defaultValue)
+    // console.log('defaultValue', defaultValue)
     switch (type) {
         // TODO 支持更多类型
         case FieldType.Number:
@@ -218,10 +218,7 @@ export class AutoInputManager {
     }
     // 开启事件监听
     public open() {
-        if (this.listener) {
-            // 已经有一个监听器在运行了
-            return;
-        }
+        this.close();  // 先关闭已有的监听器
 
         let fieldIdList: string[] = [], defaultValueList: string[] = [], typeList: FieldType[] = [];
         this.arrayFields.forEach((arrayField) => {

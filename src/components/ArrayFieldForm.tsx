@@ -148,7 +148,7 @@ function ArrayFieldForm() {
         setLoadingContent('刷新数据中')
 
         const selection = await bitable.base.getSelection();
-        console.log("selection", selection);
+        // console.log("selection", selection);
         if (!selection.tableId) {
             Toast.error('table.err')
             return;

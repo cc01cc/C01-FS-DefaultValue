@@ -22,12 +22,12 @@ export class Utils {
         let successCount = 0;
         // console.log("toSetTask", toSetTask.length);
         const step = 500;
-        console.log("toSetTask", toSetTask)
+        // console.log("toSetTask", toSetTask)
         for (let index = 0; index < toSetTask.length; index += step) {
             Toast.info("已填充" + toSetTask.length + "条记录")
             const element = toSetTask.slice(index, index + step);
             const sleep = element.length
-            console.log('element', element)
+            // console.log('element', element)
             await tableInfo?.table.setRecords(element).then(() => {
                 successCount += element.length;
             }).catch((e: any) => {
