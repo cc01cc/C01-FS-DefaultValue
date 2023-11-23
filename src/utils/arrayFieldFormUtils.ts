@@ -67,6 +67,7 @@ export const openAutoInputUtils = async (table: ITable, fields: ZField[], arrayF
         const toSetTask = recordList.map((recordId) => (getRecordDefaultValue(recordId, fieldIdList, defaultValueList, typeList)));
         await Utils.setRecordsUtils(toSetTask, table);
     })
+
 }
 
 export const getRecordDefaultValue = (recordId: string, fieldIdList: string[], defaultValueList: any[], typeList: FieldType[]): IRecord | undefined => {
@@ -184,3 +185,54 @@ export const fetchNewData = async (chosenTable: ITable): Promise<{
         fieldListInTable: tempFieldListInTable,
     }
 }
+
+// 定义一个类来管理事件监听
+export class AutoInputManager {
+    private table: ITable;
+    private fields: ZField[];
+    private arrayFields: any[];
+    private listener: (() => void) | null = null;
+
+    constructor(table: ITable, fields: ZField[], arrayFields: any[]) {
+        this.table = table;
+        this.fields = fields;
+        this.arrayFields = arrayFields;
+    }
+
+    // 开启事件监听
+    public open() {
+        if (this.listener) {
+            // 已经有一个监听器在运行了
+            return;
+        }
+
+        let fieldIdList: string[] = [], defaultValueList: string[] = [], typeList: FieldType[] = [];
+        this.arrayFields.forEach((arrayField) => {
+            const fieldMeta = this.fields.find(fieldMeta => fieldMeta.id === arrayField.name);
+            if (arrayField.autoInput && arrayField.name && arrayField.defaultValue && fieldMeta) {
+                fieldIdList.push(arrayField.name);
+                defaultValueList.push(arrayField.defaultValue);
+                typeList.push(fieldMeta.iFieldMeta.type);
+            }
+        });
+
+        if (!fieldIdList.length) {
+            return;
+        }
+
+        this.listener = this.table.onRecordAdd(async (event) => {
+            const recordList = event.data;
+            const toSetTask = recordList.map((recordId) => (getRecordDefaultValue(recordId, fieldIdList, defaultValueList, typeList)));
+            await Utils.setRecordsUtils(toSetTask, this.table);
+        });
+    }
+
+    // 关闭事件监听
+    public close() {
+        if (this.listener) {
+            this.listener();
+            this.listener = null;
+        }
+    }
+}
+

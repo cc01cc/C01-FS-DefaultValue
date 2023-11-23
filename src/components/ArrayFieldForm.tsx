@@ -19,7 +19,7 @@ import {ArrayField, Button, Form, Spin, Toast, useFormState} from '@douyinfe/sem
 import {IconMinusCircle, IconPlusCircle} from '@douyinfe/semi-icons';
 import {bitable, FieldType, ICommonSelectFieldProperty, ISelectFieldOption, ITable} from "@lark-base-open/js-sdk";
 import {debounce} from 'lodash';
-import {fetchNewData, getDefaultValue, openAutoInputUtils} from "../utils/arrayFieldFormUtils";
+import {AutoInputManager, fetchNewData, getDefaultValue} from "../utils/arrayFieldFormUtils";
 import {FieldListInTable, ZField, ZTable} from "../type/type";
 import {fillByIndex} from "../utils/FillDefaultValue";
 
@@ -117,6 +117,8 @@ function ArrayFieldForm() {
                 setOptionsList(JSON.parse(localStorage.getItem('optionsList') || ''));
                 // console.log('formApi', formApi.current.getValues())
             }
+
+            manager = new AutoInputManager(tempTableActive, fields, arrayFields)
         }
     }, []);
     useEffect(() => {
@@ -217,16 +219,25 @@ function ArrayFieldForm() {
         setFieldListCanChooseList([...specialFieldListCanChooseList])
     }, [arrayFields])
 
+    let manager: AutoInputManager;
     useEffect(() => {
-        const fetchData = async () => {
-            if (!tableActive) {
-                return
-            }
-            await openAutoInputUtils(tableActive, fields, arrayFields);
-        };
+            const fetchData = async () => {
+                    if (!tableActive) {
+                        return
+                    }
+                    // await openAutoInputUtils(tableActive, fields, arrayFields);
+                    if (!manager) {
+                        manager = new AutoInputManager(tableActive, fields, arrayFields); // 关闭监听
+                    }
 
-        fetchData();
-    }, [arrayFields]);
+                    manager.open(); // 开启监听
+                }
+            ;
+
+            fetchData();
+        }, [arrayFields]
+    )
+    ;
 
     const onSelectField = async (selectedId: any, index: number) => {
         setLoading(true)
@@ -340,7 +351,8 @@ function ArrayFieldForm() {
                                         } else {
                                             Toast.error('字段数量已达上限')
                                         }
-                                    }} icon={<IconPlusCircle/>} theme='light' style={{marginTop: 20}}>添加字段</Button>
+                                    }} icon={<IconPlusCircle/>} theme='light'
+                                            style={{marginTop: 20}}>添加字段</Button>
 
                                     {
                                         arrayFields.map(({field, key, remove}, i) => {
